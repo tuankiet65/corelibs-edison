@@ -8,11 +8,10 @@
 
 #include <EthernetUdpShield.h>
 
-class DNSClientShield
-{
+class DNSClientShield {
 public:
     // ctor
-    void begin(const IPAddressShield& aDNSServer);
+    void begin(const IPAddressShield &aDNSServer);
 
     /** Convert a numeric IP address string into a four-byte IP address.
         @param aIPAddrString IP address to convert
@@ -20,7 +19,7 @@ public:
         @result 1 if aIPAddrString was successfully converted to an IP address,
                 else error code
     */
-    int inet_aton(const char *aIPAddrString, IPAddressShield& aResult);
+    int inet_aton(const char *aIPAddrString, IPAddressShield &aResult);
 
     /** Resolve the given hostname to an IP address.
         @param aHostname Name to be resolved
@@ -28,11 +27,11 @@ public:
         @result 1 if aIPAddrString was successfully converted to an IP address,
                 else error code
     */
-    int getHostByName(const char* aHostname, IPAddressShield& aResult);
+    int getHostByName(const char *aHostname, IPAddressShield &aResult);
 
 protected:
-    uint16_t BuildRequest(const char* aName);
-    uint16_t ProcessResponse(uint16_t aTimeout, IPAddressShield& aAddress);
+    uint16_t BuildRequest(const char *aName);
+    uint16_t ProcessResponse(uint16_t aTimeout, IPAddressShield &aAddress);
 
     IPAddressShield iDNSServer;
     uint16_t iRequestId;

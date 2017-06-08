@@ -8,7 +8,7 @@
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   See the GNU Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
@@ -23,9 +23,8 @@
 
 #include "Stream.h"
 
-class HardwareSerial : public Stream
-{
-  public:
+class HardwareSerial : public Stream {
+public:
     virtual void begin(const uint32_t) = 0;
     virtual void end() = 0;
     virtual int available(void) = 0;

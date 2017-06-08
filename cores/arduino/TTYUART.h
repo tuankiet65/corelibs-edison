@@ -26,45 +26,46 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <pthread.h>
 
-class TTYUARTClass : public HardwareSerial
-{
+class TTYUARTClass : public HardwareSerial {
 private:
 
-	// Data
-	RingBuffer *_rx_buffer ;
-	int _dwId;				// For mux identification - see variant.cpp for index resolution
-	int _tty_fd;
-	int _pipe_tx_rx[2];
-	char * _tty_name;
-	uint32_t _dwBaudRate;
-	bool _console;
-	bool _active = false;
+    // Data
+    RingBuffer *_rx_buffer ;
+    int _dwId;				// For mux identification - see variant.cpp for index resolution
+    int _tty_fd;
+    int _pipe_tx_rx[2];
+    char *_tty_name;
+    uint32_t _dwBaudRate;
+    bool _console;
+    bool _active = false;
 
-	// Use threads to support the model of available/peek the Serial class requires
-	pthread_t _thread;
-	pthread_mutex_t _mutex;
-	pthread_barrier_t _barrier;
+    // Use threads to support the model of available/peek the Serial class requires
+    pthread_t _thread;
+    pthread_mutex_t _mutex;
+    pthread_barrier_t _barrier;
 
-	int _detach_console( void ) ;
-	int _reattach_console( void ) ;
+    int _detach_console( void ) ;
+    int _reattach_console( void ) ;
 
 public:
-	TTYUARTClass( RingBuffer* pRx_buffer, uint32_t dwId, bool console = false ) ;
-	virtual ~TTYUARTClass();
+    TTYUARTClass( RingBuffer *pRx_buffer, uint32_t dwId, bool console = false ) ;
+    virtual ~TTYUARTClass();
 
-	static void * TTYIrqHandler(void * pargs);	// static has no implicit this
-	int init_tty( char * tty_name );
-	void begin( const uint32_t dwBaudRate ) ;
-	void end( void ) ;
-	int available( void ) ;
-	bool overflow( void ) ;
-	int peek( void ) ;
-	int read( void ) ;
-	void flush( void ) ;
-	size_t write( const uint8_t c ) ;
-	using Print::write ; // pull in write(str) and write(buf, size) from Print
+    static void *TTYIrqHandler(void *pargs);	// static has no implicit this
+    int init_tty( char *tty_name );
+    void begin( const uint32_t dwBaudRate ) ;
+    void end( void ) ;
+    int available( void ) ;
+    bool overflow( void ) ;
+    int peek( void ) ;
+    int read( void ) ;
+    void flush( void ) ;
+    size_t write( const uint8_t c ) ;
+    using Print::write ; // pull in write(str) and write(buf, size) from Print
 
-	operator bool() { return true; }; // UART always active
+    operator bool() {
+        return true;
+    }; // UART always active
 };
 
 #endif /* __TTYUART_H__ */

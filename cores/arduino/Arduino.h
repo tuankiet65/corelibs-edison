@@ -42,7 +42,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "interrupt.h"
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #define INPUT		0x00
@@ -111,23 +111,23 @@ extern "C"{
 #endif
 
 #ifdef __cplusplus
-#include "WCharacter.h"
-#include "WString.h"
+    #include "WCharacter.h"
+    #include "WString.h"
 
-void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
-void noTone(uint8_t _pin);
+    void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
+    void noTone(uint8_t _pin);
 
-void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, int val, uint8_t bits=8, uint8_t del=10);
+    void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, int val, uint8_t bits = 8, uint8_t del = 10);
 
-unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000);
+    unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000);
 
-void softAnalogWrite(uint32_t pin, uint32_t duty, uint32_t freq);
-void softAnalogWrite(uint32_t pin, uint32_t duty);
+    void softAnalogWrite(uint32_t pin, uint32_t duty, uint32_t freq);
+    void softAnalogWrite(uint32_t pin, uint32_t duty);
 
-// due to String class is not scoped using namespace, in order to make the
-// compilation works with minimum impact the operator is being added on this
-// file in order to keep this operator visible to the sketch context.
-String operator + ( const char *cstr, const String &str_arg);
+    // due to String class is not scoped using namespace, in order to make the
+    // compilation works with minimum impact the operator is being added on this
+    // file in order to keep this operator visible to the sketch context.
+    String operator + ( const char *cstr, const String &str_arg);
 #endif
 
 #include "WMath.h"

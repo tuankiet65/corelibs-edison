@@ -4,46 +4,45 @@
 #include <inttypes.h>
 
 extern "C" {
-	#include "utility/wl_definitions.h"
-	#include "utility/wl_types.h"
-	#include "utility/n135.h"
+#include "utility/wl_definitions.h"
+#include "utility/wl_types.h"
+#include "utility/n135.h"
 }
 
 #include "IPAddress.h"
 #include "WiFiClient.h"
 #include "WiFiServer.h"
 
-class WiFiClass
-{
+class WiFiClass {
 private:
-	void init();
+    void init();
 
-	uint8_t	_status;
-	IPAddress _local_ip;
-	IPAddress _dns_server;
-	IPAddress _gateway;
-	IPAddress _subnet;
-	IPAddress _dns_server2;
-	uint8_t getEncrBySsid(int count, char * ssid);
-	uint8_t getEncrType(char * encr);
-	IPAddress getSubnet();
-	IPAddress getLocalIP();
-	
-	/* for sockets */
-	struct	ifreq ifr;
-	int if_sock;	
+    uint8_t	_status;
+    IPAddress _local_ip;
+    IPAddress _dns_server;
+    IPAddress _gateway;
+    IPAddress _subnet;
+    IPAddress _dns_server2;
+    uint8_t getEncrBySsid(int count, char *ssid);
+    uint8_t getEncrType(char *encr);
+    IPAddress getSubnet();
+    IPAddress getLocalIP();
 
-	char 	_networkSsid[WL_NETWORKS_LIST_MAXNUM][WL_SSID_MAX_LENGTH];
-	int32_t	_networkRssi[WL_NETWORKS_LIST_MAXNUM];
-	char 	_networkEncr[WL_NETWORKS_LIST_MAXNUM][WL_ENCR_STRLEN];
-	char 	fwVersion[WL_FW_VER_LENGTH];
-	// settings of current selected network
-	char 	_ssid[WL_SSID_MAX_LENGTH];
-	uint8_t _bssid[WL_MAC_ADDR_LENGTH];
-	uint8_t _mac[WL_MAC_ADDR_LENGTH];
-	uint8_t _localIp[WL_IPV4_LENGTH];
-	uint8_t _subnetMask[WL_IPV4_LENGTH];
-	uint8_t _gatewayIp[WL_IPV4_LENGTH];
+    /* for sockets */
+    struct	ifreq ifr;
+    int if_sock;
+
+    char 	_networkSsid[WL_NETWORKS_LIST_MAXNUM][WL_SSID_MAX_LENGTH];
+    int32_t	_networkRssi[WL_NETWORKS_LIST_MAXNUM];
+    char 	_networkEncr[WL_NETWORKS_LIST_MAXNUM][WL_ENCR_STRLEN];
+    char 	fwVersion[WL_FW_VER_LENGTH];
+    // settings of current selected network
+    char 	_ssid[WL_SSID_MAX_LENGTH];
+    uint8_t _bssid[WL_MAC_ADDR_LENGTH];
+    uint8_t _mac[WL_MAC_ADDR_LENGTH];
+    uint8_t _localIp[WL_IPV4_LENGTH];
+    uint8_t _subnetMask[WL_IPV4_LENGTH];
+    uint8_t _gatewayIp[WL_IPV4_LENGTH];
 
 public:
     static int16_t 	_state[MAX_SOCK_NUM];
@@ -59,14 +58,14 @@ public:
     /*
      * Get firmware version
      */
-    char* firmwareVersion();
+    char *firmwareVersion();
 
 
     /* Start Wifi connection for OPEN networks
      *
      * param ssid: Pointer to the SSID string.
      */
-    int begin(char* ssid);
+    int begin(char *ssid);
 
     /* Start Wifi connection with WEP encryption.
      * Configure a key into the device. The key type (WEP-40, WEP-104)
@@ -76,7 +75,7 @@ public:
      * param key_idx: The key index to set. Valid values are 0-3.
      * param key: Key input buffer.
      */
-    int begin(char* ssid, uint8_t key_idx, const char* key);
+    int begin(char *ssid, uint8_t key_idx, const char *key);
 
     /* Start Wifi connection with passphrase
      * the most secure supported mode will be automatically selected
@@ -85,7 +84,7 @@ public:
      * param passphrase: Passphrase. Valid characters in a passphrase
      *        must be between ASCII 32-126 (decimal).
      */
-    int begin(char* ssid, const char *passphrase);
+    int begin(char *ssid, const char *passphrase);
 
     /* Change Ip configuration settings disabling the dhcp client
         *
@@ -96,14 +95,14 @@ public:
     /* Change Ip configuration settings disabling the dhcp client
         *
         * param local_ip: 	Static ip configuration
-	* param dns_server:     IP configuration for DNS server 1
+    * param dns_server:     IP configuration for DNS server 1
         */
     void config(IPAddress local_ip, IPAddress dns_server);
 
     /* Change Ip configuration settings disabling the dhcp client
         *
         * param local_ip: 	Static ip configuration
-	* param dns_server:     IP configuration for DNS server 1
+    * param dns_server:     IP configuration for DNS server 1
         * param gateway : 	Static gateway configuration
         */
     void config(IPAddress local_ip, IPAddress dns_server, IPAddress gateway);
@@ -111,7 +110,7 @@ public:
     /* Change Ip configuration settings disabling the dhcp client
         *
         * param local_ip: 	Static ip configuration
-	* param dns_server:     IP configuration for DNS server 1
+    * param dns_server:     IP configuration for DNS server 1
         * param gateway: 	Static gateway configuration
         * param subnet:		Static Subnet mask
         */
@@ -143,7 +142,7 @@ public:
      *
      * return: pointer to uint8_t array with length WL_MAC_ADDR_LENGTH
      */
-    uint8_t* macAddress(uint8_t* mac);
+    uint8_t *macAddress(uint8_t *mac);
 
     /*
      * Get the interface IP address.
@@ -164,14 +163,14 @@ public:
      *
      * return: gateway ip address value
      */
-   IPAddress gatewayIP();
+    IPAddress gatewayIP();
 
     /*
      * Return the current SSID associated with the network
      *
      * return: ssid string
      */
-    char* SSID();
+    char *SSID();
 
     /*
       * Return the current BSSID associated with the network.
@@ -179,7 +178,7 @@ public:
       *
       * return: pointer to uint8_t array with length WL_MAC_ADDR_LENGTH
       */
-    uint8_t* BSSID(uint8_t* bssid);
+    uint8_t *BSSID(uint8_t *bssid);
 
     /*
       * Return the current RSSI /Received Signal Strength in dBm)
@@ -207,16 +206,16 @@ public:
      * Return the SSID discovered during the network scan.
      *
      * param networkItem: specify from which network item want to get the information
-	 *
+     *
      * return: ssid string of the specified item on the networks scanned list
      */
-    char*	SSID(uint8_t networkItem);
+    char	*SSID(uint8_t networkItem);
 
     /*
      * Return the encryption type of the networks discovered during the scanNetworks
      *
      * param networkItem: specify from which network item want to get the information
-	 *
+     *
      * return: encryption type (enum wl_enc_type) of the specified item on the networks scanned list
      */
     uint8_t	encryptionType(uint8_t networkItem);
@@ -225,7 +224,7 @@ public:
      * Return the RSSI of the networks discovered during the scanNetworks
      *
      * param networkItem: specify from which network item want to get the information
-	 *
+     *
      * return: signed value of RSSI of the specified item on the networks scanned list
      */
     int32_t RSSI(uint8_t networkItem);
@@ -244,7 +243,7 @@ public:
      * result: 1 if aIPAddrString was successfully converted to an IP address,
      *          else error code
      */
-    int hostByName(const char* aHostname, IPAddress& aResult);
+    int hostByName(const char *aHostname, IPAddress &aResult);
 
     friend class WiFiClient;
     friend class WiFiServer;

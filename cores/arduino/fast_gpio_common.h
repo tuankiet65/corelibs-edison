@@ -34,7 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 int fastGpioFindUioByName(const char *name);
 
 int fastGpioGetInfo(const int uio_num,
-		    const int index,
-		    char *path_fmt);
+                    const int index,
+                    char *path_fmt);
 
 #endif // __FAST_GPIO_COMMON_H__

@@ -24,7 +24,7 @@
 
 #include <inttypes.h>
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 int i2c_getadapter(uint32_t i2c_bus_address);

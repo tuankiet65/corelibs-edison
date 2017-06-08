@@ -59,13 +59,13 @@ Author : David Hunt <dave@emutex.com> 2014
 /*************************** Static ****************************/
 
 struct fgpio_nc {
-	char * regs;
-	int uio_handle;
-	pthread_mutex_t mutex;
+    char *regs;
+    int uio_handle;
+    pthread_mutex_t mutex;
 
-	unsigned baseport;
-	unsigned size;
-	unsigned uio_num;
+    unsigned baseport;
+    unsigned size;
+    unsigned uio_num;
 };
 
 static struct fgpio_nc fgpio;
@@ -77,47 +77,49 @@ static struct fgpio_nc fgpio;
  *
  * Initialise the fast NC GPIO interface
  */
-int fastGpioNCInit(void)
-{
-	int i, ret;
-	extern int errno;
+int fastGpioNCInit(void) {
+    int i, ret;
+    extern int errno;
+    ret = fastGpioFindUioByName(UIO_NAME);
 
-	ret = fastGpioFindUioByName(UIO_NAME);
-	if (ret < 0) {
-		trace_error("Failed to find UIO name '%s': %s\n",
-			    UIO_NAME, strerror(ret));
-		return ret;
-	}
-	fgpio.uio_num = ret;
+    if (ret < 0) {
+        trace_error("Failed to find UIO name '%s': %s\n",
+                    UIO_NAME, strerror(ret));
+        return ret;
+    }
 
-	ret = fastGpioGetInfo(fgpio.uio_num, UIO_PORT, UIO_START_PATH_FMT);
-	if (ret < 0) {
-		trace_error("Failed to read UIO base port: %s\n",
-			    strerror(ret));
-		return ret;
-	}
-	fgpio.baseport = ret;
+    fgpio.uio_num = ret;
+    ret = fastGpioGetInfo(fgpio.uio_num, UIO_PORT, UIO_START_PATH_FMT);
 
+    if (ret < 0) {
+        trace_error("Failed to read UIO base port: %s\n",
+                    strerror(ret));
+        return ret;
+    }
 
-	ret = fastGpioGetInfo(fgpio.uio_num, UIO_PORT, UIO_SIZE_PATH_FMT);
-	if (ret < 0) {
-		trace_error("Failed to read UIO size: %s\n", strerror(ret));
-		return ret;
-	}
-	fgpio.size = ret;
+    fgpio.baseport = ret;
+    ret = fastGpioGetInfo(fgpio.uio_num, UIO_PORT, UIO_SIZE_PATH_FMT);
 
-	trace_debug("Requesting access to %u I/O ports starting at 0x%04X\n",
-		    fgpio.size, fgpio.baseport); fflush(stdout);
+    if (ret < 0) {
+        trace_error("Failed to read UIO size: %s\n", strerror(ret));
+        return ret;
+    }
 
-	/* Get access to the ports */
-	if (ioperm(fgpio.baseport, fgpio.size, 1)) {
-		perror("ioperm");
-		return errno;
-	}
+    fgpio.size = ret;
+    trace_debug("Requesting access to %u I/O ports starting at 0x%04X\n",
+                fgpio.size, fgpio.baseport);
+    fflush(stdout);
 
-	trace_debug("Initialised PIO on UIO %d size %d baseport 0x%04X\n",
-		    fgpio.uio_num, fgpio.size, fgpio.baseport); fflush(stdout);
-	return 0;
+    /* Get access to the ports */
+    if (ioperm(fgpio.baseport, fgpio.size, 1)) {
+        perror("ioperm");
+        return errno;
+    }
+
+    trace_debug("Initialised PIO on UIO %d size %d baseport 0x%04X\n",
+                fgpio.uio_num, fgpio.size, fgpio.baseport);
+    fflush(stdout);
+    return 0;
 }
 
 /**
@@ -125,11 +127,10 @@ int fastGpioNCInit(void)
  *
  * Release the NC GPIO interface
  */
-void fastGpioNCFini(void)
-{
-	if (ioperm(fgpio.baseport, fgpio.size, 0)) {
-		perror("ioperm");
-	}
+void fastGpioNCFini(void) {
+    if (ioperm(fgpio.baseport, fgpio.size, 0)) {
+        perror("ioperm");
+    }
 }
 
 //TODO Update comment
@@ -143,17 +144,17 @@ void fastGpioNCFini(void)
  * This version of fast write - does a read/modify/write which ends up
  * approx 1/4 the speed of a destructive write for any given square wave.
  */
-void fastGpioNCDigitalWrite(uint8_t reg_offset, uint8_t gpio_mask, uint8_t val)
-{
-	uint8_t regval;
+void fastGpioNCDigitalWrite(uint8_t reg_offset, uint8_t gpio_mask, uint8_t val) {
+    uint8_t regval;
+    regval = inb(fgpio.baseport + reg_offset);
 
-	regval = inb(fgpio.baseport + reg_offset);
-	if (val){
-		regval |= gpio_mask;
-	}else{
-		regval &= ~gpio_mask;
-	}
-	outb(regval, fgpio.baseport + reg_offset);
+    if (val) {
+        regval |= gpio_mask;
+    } else {
+        regval &= ~gpio_mask;
+    }
+
+    outb(regval, fgpio.baseport + reg_offset);
 }
 
 /**
@@ -163,9 +164,8 @@ void fastGpioNCDigitalWrite(uint8_t reg_offset, uint8_t gpio_mask, uint8_t val)
  * the values of the bits in question and don't do a read/modify/write.
  *
  */
-void fastGpioNCDigitalWriteDestructive(uint8_t reg_offset, uint8_t gpio_levels)
-{
-	outb(gpio_levels, fgpio.baseport + reg_offset);
+void fastGpioNCDigitalWriteDestructive(uint8_t reg_offset, uint8_t gpio_levels) {
+    outb(gpio_levels, fgpio.baseport + reg_offset);
 }
 
 /**
@@ -173,11 +173,10 @@ void fastGpioNCDigitalWriteDestructive(uint8_t reg_offset, uint8_t gpio_levels)
  *
  * Do a fast read from the GPIO regs
  */
-uint8_t fastGpioNCDigitalRead(uint8_t reg_offset, uint8_t gpio_mask)
-{
-	uint8_t regval;
-	regval = inb(fgpio.baseport + reg_offset) & gpio_mask;
-	return regval;
+uint8_t fastGpioNCDigitalRead(uint8_t reg_offset, uint8_t gpio_mask) {
+    uint8_t regval;
+    regval = inb(fgpio.baseport + reg_offset) & gpio_mask;
+    return regval;
 }
 /**
  * fastGpioDigitalLatch
@@ -185,11 +184,8 @@ uint8_t fastGpioNCDigitalRead(uint8_t reg_offset, uint8_t gpio_mask)
  * Read the current state of the GPIO registers.
  *
  */
-uint8_t fastGpioNCDigitalLatch(uint8_t reg_offset)
-{
-	uint8_t regval;
-
-	regval = inb(fgpio.baseport + reg_offset);
-
-	return regval;
+uint8_t fastGpioNCDigitalLatch(uint8_t reg_offset) {
+    uint8_t regval;
+    regval = inb(fgpio.baseport + reg_offset);
+    return regval;
 }

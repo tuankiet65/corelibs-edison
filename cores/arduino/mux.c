@@ -26,18 +26,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define MY_TRACE_PREFIX "mux"
 
 /* If alternate function is enabled, skip to it */
-void pin2alternate(PinDescription **p_ptr)
-{
-	PinDescription *p = *p_ptr;
+void pin2alternate(PinDescription **p_ptr) {
+    PinDescription *p = *p_ptr;
 
-	for (; p && p->iAlternate && p->pAlternate; p = p->pAlternate) {
+    for (; p && p->iAlternate && p->pAlternate; p = p->pAlternate) {
 //		trace_debug("%s: arduino_pin=%u: skipping to "
 //			    "alternate function (gpio%d)", __func__,
 //			    p->pAlternate->ulArduinoId,
 //			    p->pAlternate->ulGPIOId);
-	}
+    }
 
-	*p_ptr = p;
+    *p_ptr = p;
 }
 
 /**
@@ -46,171 +45,182 @@ void pin2alternate(PinDescription **p_ptr)
  * Does the nasty business of iterating through the array matching GPIO ids and setting muxing based on tFunction against
  * given arduino_pin
  */
-int muxSelect(uint8_t arduino_pin, uint32_t tFunction)
-{
-	int i = 0, j = 0, k = 0, matched = 0;
-	mux_sel_t sel;
-	PinDescription *p = NULL;
-	int ret = -EINVAL;
+int muxSelect(uint8_t arduino_pin, uint32_t tFunction) {
+    int i = 0, j = 0, k = 0, matched = 0;
+    mux_sel_t sel;
+    PinDescription *p = NULL;
+    int ret = -EINVAL;
 
-	for (i = 0; i < sizeof_g_APinDescription; i++) {
-		p = &g_APinDescription[i];
+    for (i = 0; i < sizeof_g_APinDescription; i++) {
+        p = &g_APinDescription[i];
 
-		/* Find Arduino pin mapping */
-		if (p->ulArduinoId == arduino_pin){
+        /* Find Arduino pin mapping */
+        if (p->ulArduinoId == arduino_pin) {
+            /* If alternate function is enabled, skip to it */
+            for (; p && p->iAlternate && p->pAlternate;
+                    p = p->pAlternate) {
+                trace_debug("%s: arduino_pin=%u: skipping to "
+                            "alternate function (gpio%d)",
+                            __func__,
+                            p->pAlternate->ulArduinoId,
+                            p->pAlternate->ulGPIOId);
+            }
 
-			/* If alternate function is enabled, skip to it */
-			for (; p && p->iAlternate && p->pAlternate;
-			     p = p->pAlternate) {
-				trace_debug("%s: arduino_pin=%u: skipping to "
-					    "alternate function (gpio%d)",
-					    __func__,
-					    p->pAlternate->ulArduinoId,
-					    p->pAlternate->ulGPIOId);
-			}
-			if (p->ptMuxDesc == NULL){
-				/* No muxing options for this pin */
-				return 0;
-			}
+            if (p->ptMuxDesc == NULL) {
+                /* No muxing options for this pin */
+                return 0;
+            }
 
-			/* Find possible mux entries */
-			for ( j = 0; j < p->ulMuxDescEntries; j++){
+            /* Find possible mux entries */
+            for ( j = 0; j < p->ulMuxDescEntries; j++) {
+                sel = p->ptMuxDesc[j];
 
-				sel = p->ptMuxDesc[j];
-				if (sel.tFunction & tFunction){
+                if (sel.tFunction & tFunction) {
+                    /* Bit mask matched - set state as indicated */
+                    for (k = 0; k < sizeof_g_APinDescription; k++) {
+                        if (g_APinDescription[k].ulGPIOId == sel.ulGPIOId) {
+                            trace_info("%s: mux_sel gpio%u:=%u (arduino_pin=%u)",
+                                       __func__, sel.ulGPIOId, sel.ulValue, arduino_pin);
 
-					/* Bit mask matched - set state as indicated */
-					for (k = 0; k < sizeof_g_APinDescription; k++){
-						if (g_APinDescription[k].ulGPIOId == sel.ulGPIOId){
-							trace_info("%s: mux_sel gpio%u:=%u (arduino_pin=%u)",
-								__func__, sel.ulGPIOId, sel.ulValue, arduino_pin);
-							if (sel.ulValue == NONE) {
-								/* No output, so switch to HiZ input */
-								sysfsGpioDirection(sel.ulGPIOId, 0, NONE);
-								sysfsGpioSetDrive(sel.ulGPIOId, GPIO_DRIVE_HIZ);
-							} else if (sel.ulValue > 1) {
-								sysfsGpioSetCurrentPinmux(sel.ulGPIOId, sel.ulValue);
-							} else {
-								/* Output defined as LOW or HIGH */
-								sysfsGpioDirection(sel.ulGPIOId, 1, sel.ulValue);
-								sysfsGpioSetDrive(sel.ulGPIOId, GPIO_DRIVE_STRONG);
-							}
-							matched = 1;
-							break;
-						}
-					}
-				}
-			}
-			break;
-		}
-	}
-	return matched ? 0 : -EINVAL;
+                            if (sel.ulValue == NONE) {
+                                /* No output, so switch to HiZ input */
+                                sysfsGpioDirection(sel.ulGPIOId, 0, NONE);
+                                sysfsGpioSetDrive(sel.ulGPIOId, GPIO_DRIVE_HIZ);
+                            } else if (sel.ulValue > 1) {
+                                sysfsGpioSetCurrentPinmux(sel.ulGPIOId, sel.ulValue);
+                            } else {
+                                /* Output defined as LOW or HIGH */
+                                sysfsGpioDirection(sel.ulGPIOId, 1, sel.ulValue);
+                                sysfsGpioSetDrive(sel.ulGPIOId, GPIO_DRIVE_STRONG);
+                            }
+
+                            matched = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            break;
+        }
+    }
+
+    return matched ? 0 : -EINVAL;
 }
 
-int muxSelectAnalogPin(uint8_t pin)
-{
-	int i = 0;
+int muxSelectAnalogPin(uint8_t pin) {
+    int i = 0;
 
-	if (pin >= NUM_ANALOG_INPUTS) {
-		return -EINVAL;
-	}
+    if (pin >= NUM_ANALOG_INPUTS) {
+        return -EINVAL;
+    }
 
-	//trace_debug("%s(%u): gpio%u:=%u", __func__, pin, mux.sel_id, mux.sel_val);
+    //trace_debug("%s(%u): gpio%u:=%u", __func__, pin, mux.sel_id, mux.sel_val);
+    i = muxSelect(mux_sel_analog[pin], FN_ANALOG);
 
-	i = muxSelect(mux_sel_analog[pin], FN_ANALOG);
-	if (i < 0)
-		return i;
+    if (i < 0) {
+        return i;
+    }
 
-	return 0;
+    return 0;
 }
 
-int muxSelectUart(uint8_t interface)
-{
-	int i = 0, ret = 0;
+int muxSelectUart(uint8_t interface) {
+    int i = 0, ret = 0;
 
-	if (interface >= NUM_UARTS){
-		return -EINVAL;
-	}
+    if (interface >= NUM_UARTS) {
+        return -EINVAL;
+    }
 
-	// Require both pins - to be described
-	if (MUX_SEL_NONE == mux_sel_uart[interface][0] && MUX_SEL_NONE == mux_sel_uart[interface][1]) {
-		return 0;	// No muxing to be done
-	}
+    // Require both pins - to be described
+    if (MUX_SEL_NONE == mux_sel_uart[interface][0] && MUX_SEL_NONE == mux_sel_uart[interface][1]) {
+        return 0;	// No muxing to be done
+    }
 
-	for ( i = 0; i < MUX_DEPTH_UART; i++){
-		ret = muxSelect(mux_sel_uart[interface][i], FN_UART);
-		if (ret < 0)
-			return ret;
-	}
-	return ret;
+    for ( i = 0; i < MUX_DEPTH_UART; i++) {
+        ret = muxSelect(mux_sel_uart[interface][i], FN_UART);
+
+        if (ret < 0) {
+            return ret;
+        }
+    }
+
+    return ret;
 }
 
-int muxSelectSpi(uint8_t interface)
-{
-	int i = 0, ret = -EINVAL;
+int muxSelectSpi(uint8_t interface) {
+    int i = 0, ret = -EINVAL;
 
-	if (interface >= NUM_SPI){
-		return -EINVAL;
-	}
+    if (interface >= NUM_SPI) {
+        return -EINVAL;
+    }
 
-	for ( i = 0; i < MUX_DEPTH_SPI; i++){
-		if (mux_sel_spi[interface][i] == MUX_SEL_NONE)
-			continue;
-		ret = muxSelect(mux_sel_spi[interface][i], FN_SPI);
-		if (ret < 0)
-			return ret;
-	}
-	return ret;
+    for ( i = 0; i < MUX_DEPTH_SPI; i++) {
+        if (mux_sel_spi[interface][i] == MUX_SEL_NONE) {
+            continue;
+        }
+
+        ret = muxSelect(mux_sel_spi[interface][i], FN_SPI);
+
+        if (ret < 0) {
+            return ret;
+        }
+    }
+
+    return ret;
 }
 
-int muxSelectI2c(uint8_t interface)
-{
-	int i = 0, ret = -EINVAL;
+int muxSelectI2c(uint8_t interface) {
+    int i = 0, ret = -EINVAL;
 
-	if (interface >= NUM_I2C){
-		return -EINVAL;
-	}
+    if (interface >= NUM_I2C) {
+        return -EINVAL;
+    }
 
-	for ( i = 0; i < MUX_DEPTH_I2C; i++){
-		if (mux_sel_i2c[interface][i] == MUX_SEL_NONE)
-			continue;
-		ret = muxSelect(mux_sel_i2c[interface][i], FN_I2C);
-		if (ret < 0)
-			return ret;
-	}
-	return ret;
+    for ( i = 0; i < MUX_DEPTH_I2C; i++) {
+        if (mux_sel_i2c[interface][i] == MUX_SEL_NONE) {
+            continue;
+        }
+
+        ret = muxSelect(mux_sel_i2c[interface][i], FN_I2C);
+
+        if (ret < 0) {
+            return ret;
+        }
+    }
+
+    return ret;
 }
 
-int muxSelectPwmPin(uint8_t pin)
-{
-	return muxSelect(pin, FN_PWM);
+int muxSelectPwmPin(uint8_t pin) {
+    return muxSelect(pin, FN_PWM);
 }
 
-int muxInit(void)
-{
-	int i = 0, j = 0;
-	mux_sel_t sel;
-	PinDescription *p = NULL;
+int muxInit(void) {
+    int i = 0, j = 0;
+    mux_sel_t sel;
+    PinDescription *p = NULL;
 
-	/*
-	 * Setup initial muxes as indicated by controller array
-	 */
-	for (i = 0; i < sizeof_g_APinDescription; i++) {
-		p = &g_APinDescription[i];
+    /*
+     * Setup initial muxes as indicated by controller array
+     */
+    for (i = 0; i < sizeof_g_APinDescription; i++) {
+        p = &g_APinDescription[i];
 
-		/* If alternate function is enabled, skip to it */
-		for (; p && p->iAlternate && p->pAlternate; p = p->pAlternate) {
-			trace_debug("%s: arduino_pin=%u: skipping to "
-				    "alternate function (gpio%d)", __func__,
-				    p->pAlternate->ulArduinoId,
-				    p->pAlternate->ulGPIOId);
-		}
+        /* If alternate function is enabled, skip to it */
+        for (; p && p->iAlternate && p->pAlternate; p = p->pAlternate) {
+            trace_debug("%s: arduino_pin=%u: skipping to "
+                        "alternate function (gpio%d)", __func__,
+                        p->pAlternate->ulArduinoId,
+                        p->pAlternate->ulGPIOId);
+        }
 
-		/* Skip past any GPIO entry that doesn't have a persistent handle or a relevant mux entry */
-		if (p->iHandle >= 0 && p->ulArduinoId != NONE && p->ptMuxDesc != NULL && p->ulInitialMuxFn != NONE) {
-			trace_debug("%s: setting up mux for gpio%d", __func__, p->ulGPIOId);
-			muxSelect(p->ulArduinoId, p->ulInitialMuxFn);
-		}
-	}
-	return 0;
+        /* Skip past any GPIO entry that doesn't have a persistent handle or a relevant mux entry */
+        if (p->iHandle >= 0 && p->ulArduinoId != NONE && p->ptMuxDesc != NULL && p->ulInitialMuxFn != NONE) {
+            trace_debug("%s: setting up mux for gpio%d", __func__, p->ulGPIOId);
+            muxSelect(p->ulArduinoId, p->ulInitialMuxFn);
+        }
+    }
+
+    return 0;
 }

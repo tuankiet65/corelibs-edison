@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 class Server : public Print {
 public:
-  virtual void begin() =0;
+    virtual void begin() = 0;
 };
 
 #endif

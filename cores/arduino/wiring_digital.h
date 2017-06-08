@@ -8,14 +8,14 @@
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   See the GNU Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
- Modified by Dan O'Donovan on 29 April 2014: 
+ Modified by Dan O'Donovan on 29 April 2014:
     - Reworked pin mux control logic to include buffer and pull-up control
     - Added Fab-E GPIO and PWM pin mapping and variant-specific #defines
     - Modified PWM code to support Galileo Gen2
@@ -70,40 +70,38 @@ extern "C" {
 
 // Describes an individual MUX setting
 typedef struct mux_select {
-	uint32_t 		ulGPIOId;	// GPIOLib ID that controls the mux
-	uint32_t 		ulValue;	// HIGH or LOW output, or NONE to disable output (HiZ INPUT)
-	uint32_t		tFunction;	// Function in the HIGH or LOW state
-}mux_sel_t;
+    uint32_t 		ulGPIOId;	// GPIOLib ID that controls the mux
+    uint32_t 		ulValue;	// HIGH or LOW output, or NONE to disable output (HiZ INPUT)
+    uint32_t		tFunction;	// Function in the HIGH or LOW state
+} mux_sel_t;
 
 #define MAX_GPIO_PATH 0x200
 
 /* Types used for the tables below */
-typedef struct _PinDescription
-{
-	uint32_t		ulGPIOId;		// Identitiy in GPIOLib as a GPIO
-	uint32_t		ulGPIOAlias;		// Alias pin
-	uint32_t		ulFastIOInfo;		// Information on how to use fast IO for pin
-	uint32_t		ulArduinoId;		// Arduino ID if any
-	uint32_t		ulInitialMuxFn;		// Initial Mux descriptor to apply to this pin
-	uint32_t		ulFixedState;		// Fixed to HIGH, LOW, NONE
-	mux_sel_t		*ptMuxDesc;		// Describes possible muxes on this pin
-	uint32_t		ulMuxDescEntries;	// sizeof ptMuxDesc
-	uint32_t		tCurrentType;		// Current State/function of pin
-	int			iHandle;		// Persistent handle - open once - use many times
-	int			iExtPullup;		// If set, an external pull-up is available.  Disable internal pull-up.
-	int			iAlternate;		// If set, switch to the alternate func (pAlternate)
-	struct _PinDescription	*pAlternate;		// Pointer to alternate function (NULL if none)
-	char			sPath[MAX_GPIO_PATH];	// Path to GPIO - required to poll/select on a gpio in user-space
+typedef struct _PinDescription {
+    uint32_t		ulGPIOId;		// Identitiy in GPIOLib as a GPIO
+    uint32_t		ulGPIOAlias;		// Alias pin
+    uint32_t		ulFastIOInfo;		// Information on how to use fast IO for pin
+    uint32_t		ulArduinoId;		// Arduino ID if any
+    uint32_t		ulInitialMuxFn;		// Initial Mux descriptor to apply to this pin
+    uint32_t		ulFixedState;		// Fixed to HIGH, LOW, NONE
+    mux_sel_t		*ptMuxDesc;		// Describes possible muxes on this pin
+    uint32_t		ulMuxDescEntries;	// sizeof ptMuxDesc
+    uint32_t		tCurrentType;		// Current State/function of pin
+    int			iHandle;		// Persistent handle - open once - use many times
+    int			iExtPullup;		// If set, an external pull-up is available.  Disable internal pull-up.
+    int			iAlternate;		// If set, switch to the alternate func (pAlternate)
+    struct _PinDescription	*pAlternate;		// Pointer to alternate function (NULL if none)
+    char			sPath[MAX_GPIO_PATH];	// Path to GPIO - required to poll/select on a gpio in user-space
 } PinDescription;
 
 #define MUX_SIZE(x) sizeof(x)/sizeof(mux_sel_t)
 
-typedef struct _PinState
-{
-	uint32_t	uCurrentPwm;	/* True if currently used as PWM */
-	uint32_t	uPwmEnabled;	/* True if currently PWM is enabled */
-	uint32_t	uCurrentInput;	/* True if currently input */
-	uint32_t	uCurrentAdc;	/* True if currently used as ADC */
+typedef struct _PinState {
+    uint32_t	uCurrentPwm;	/* True if currently used as PWM */
+    uint32_t	uPwmEnabled;	/* True if currently PWM is enabled */
+    uint32_t	uCurrentInput;	/* True if currently input */
+    uint32_t	uCurrentAdc;	/* True if currently used as ADC */
 } PinState;
 
 PinDescription *pinDescriptionById(uint8_t pin);
@@ -117,7 +115,7 @@ int digitalRead(uint8_t pin);
 int pin2handle(uint8_t pin);
 int pinHandleReopen(uint8_t index);
 int pinGetIndex(uint8_t pin);
-char * pin2path(uint8_t pin);
+char *pin2path(uint8_t pin);
 int gpio2gpiohandle(uint32_t gpio);
 int pin2gpiohandle(uint8_t pin);
 

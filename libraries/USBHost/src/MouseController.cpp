@@ -19,7 +19,7 @@
 #include <MouseController.h>
 
 extern "C" {
-void __mouseControllerEmptyCallback() { }
+    void __mouseControllerEmptyCallback() { }
 }
 
 void mouseClicked()  __attribute__ ((weak, alias("__mouseControllerEmptyCallback")));
@@ -29,55 +29,57 @@ void mousePressed()  __attribute__ ((weak, alias("__mouseControllerEmptyCallback
 void mouseReleased() __attribute__ ((weak, alias("__mouseControllerEmptyCallback")));
 
 int MouseController::getXChange() {
-	int r = dx;
-	dx = 0;
-	return r;
+    int r = dx;
+    dx = 0;
+    return r;
 }
 
 int MouseController::getYChange() {
-	int r = dy;
-	dy = 0;
-	return r;
+    int r = dy;
+    dy = 0;
+    return r;
 }
 
 void MouseController::OnMouseMove(MOUSEINFO *mi) {
-	dx += mi->dX;
-	dy += mi->dY;
-	if (buttons != 0)
-		mouseDragged();
-	else
-		mouseMoved();
+    dx += mi->dX;
+    dy += mi->dY;
+
+    if (buttons != 0) {
+        mouseDragged();
+    } else {
+        mouseMoved();
+    }
 }
 
 void MouseController::OnLeftButtonUp(MOUSEINFO *mi) {
-	buttons &= ~LEFT_BUTTON;
-	mouseReleased();
-	mouseClicked();
+    buttons &= ~LEFT_BUTTON;
+    mouseReleased();
+    mouseClicked();
 }
 
 void MouseController::OnLeftButtonDown(MOUSEINFO *mi) {
-	buttons |= LEFT_BUTTON;
-	mousePressed();
+    buttons |= LEFT_BUTTON;
+    mousePressed();
 }
 
 void MouseController::OnMiddleButtonUp(MOUSEINFO *mi) {
-	buttons &= ~MIDDLE_BUTTON;
-	mouseReleased();
-	mouseClicked();
+    buttons &= ~MIDDLE_BUTTON;
+    mouseReleased();
+    mouseClicked();
 }
 
 void MouseController::OnMiddleButtonDown(MOUSEINFO *mi) {
-	buttons |= MIDDLE_BUTTON;
-	mousePressed();
+    buttons |= MIDDLE_BUTTON;
+    mousePressed();
 }
 
 void MouseController::OnRightButtonUp(MOUSEINFO *mi) {
-	buttons &= ~RIGHT_BUTTON;
-	mouseReleased();
-	mouseClicked();
+    buttons &= ~RIGHT_BUTTON;
+    mouseReleased();
+    mouseClicked();
 }
 
 void MouseController::OnRightButtonDown(MOUSEINFO *mi) {
-	buttons |= RIGHT_BUTTON;
-	mousePressed();
+    buttons |= RIGHT_BUTTON;
+    mousePressed();
 }

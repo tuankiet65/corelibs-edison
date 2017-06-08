@@ -8,26 +8,26 @@
 class WiFiClient;
 
 class WiFiServer :
-public Server {
+    public Server {
 private:
-	uint16_t _port;
-	void accept();
-	int _sock;
-	int _scansock;
-	struct sockaddr_in _sin;
-	struct sockaddr_in _cli_sin;
-	bool _init_ok;
-	WiFiClient *pclients;
-	int *_pcli_inactivity_counter;
+    uint16_t _port;
+    void accept();
+    int _sock;
+    int _scansock;
+    struct sockaddr_in _sin;
+    struct sockaddr_in _cli_sin;
+    bool _init_ok;
+    WiFiClient *pclients;
+    int *_pcli_inactivity_counter;
 public:
-	WiFiServer(uint16_t);
-	~WiFiServer();
-	WiFiClient available();
-	virtual void begin();
-	virtual size_t write(uint8_t);
-	virtual size_t write(const uint8_t *buf, size_t size);
-	void closeNotify(int idx);
-	using Print::write;
+    WiFiServer(uint16_t);
+    ~WiFiServer();
+    WiFiClient available();
+    virtual void begin();
+    virtual size_t write(uint8_t);
+    virtual size_t write(const uint8_t *buf, size_t size);
+    void closeNotify(int idx);
+    using Print::write;
 };
 
 #endif

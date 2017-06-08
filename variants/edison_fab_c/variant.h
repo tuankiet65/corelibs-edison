@@ -1,5 +1,5 @@
 /*
-variant.h major function prototypes and definition 
+variant.h major function prototypes and definition
 Copyright (C) 2014 Intel Corporation
 
 This library is free software; you can redistribute it and/or
@@ -66,7 +66,7 @@ extern TTYUARTClass Serial2;
 #define LINUX_PWM_DUTY_FMT		LINUX_PWM_ROOT "pwm%u/duty_cycle"
 #define LINUX_PWM_ENABLE_FMT		LINUX_PWM_ROOT "pwm%u/enable"
 
-#define PLATFORM_NAME			"Edison"	
+#define PLATFORM_NAME			"Edison"
 #define PLATFORM_ID				0xE1		//edison platform id
 #define ADC_RESOLUTION			12
 #define PWM_RESOLUTION			8
@@ -88,8 +88,8 @@ extern TTYUARTClass Serial2;
 
 /* Mux selector definition */
 struct mux_sel {
-	uint32_t sel_id;			// GPIOLib ID
-	uint32_t sel_val;
+    uint32_t sel_id;			// GPIOLib ID
+    uint32_t sel_val;
 };
 
 /* Mux selects (Arduino Pin ID).  */

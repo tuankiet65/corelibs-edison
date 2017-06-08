@@ -97,26 +97,22 @@ e-mail   :  support@circuitsathome.com
 #define USB_STATE_MASK                                      0xf0
 
 // USB Setup Packet Structure
-typedef struct
-{
-    union
-	{                          // offset   description
+typedef struct {
+    union {
+        // offset   description
         uint8_t bmRequestType;         //   0      Bit-map of request type
-        struct
-		{
+        struct {
             uint8_t    recipient:  5;  //          Recipient of the request
             uint8_t    type:       2;  //          Type of request
             uint8_t    direction:  1;  //          Direction of data X-fer
         };
     } ReqType_u;
     uint8_t    bRequest;               //   1      Request
-    union
-	{
+    union {
         uint16_t    wValue;             //   2      Depends on bRequest
-        struct
-		{
-			uint8_t    wValueLo;
-			uint8_t    wValueHi;
+        struct {
+            uint8_t    wValueLo;
+            uint8_t    wValueHi;
         };
     } wVal_u;
     uint16_t    wIndex;                 //   4      Depends on bRequest
@@ -128,10 +124,9 @@ typedef struct
  *
  * \brief Base class used for USB descriptor parsing.
  */
-class USBReadParser
-{
+class USBReadParser {
 public:
-	virtual void Parse(const uint32_t len, const uint8_t *pbuf, const uint32_t &offset) = 0;
+    virtual void Parse(const uint32_t len, const uint8_t *pbuf, const uint32_t &offset) = 0;
 };
 
 /**
@@ -139,27 +134,26 @@ public:
  *
  * \brief Device configuration class used for managing device life cycle.
  */
-class USBDeviceConfig
-{
+class USBDeviceConfig {
 public:
-	//! @brief Perform final enumeration stage.
-	virtual uint32_t Init(uint32_t parent, uint32_t port, uint32_t lowspeed) = 0;
+    //! @brief Perform final enumeration stage.
+    virtual uint32_t Init(uint32_t parent, uint32_t port, uint32_t lowspeed) = 0;
 
-	//! @brief Free USB allocated resources (pipes and address).
-	virtual uint32_t Release()		= 0;
+    //! @brief Free USB allocated resources (pipes and address).
+    virtual uint32_t Release()		= 0;
 
-	//! @brief Poll USB device. Call is made for each connected USB device on USBHost.task() call.
-	virtual uint32_t Poll()			= 0;
+    //! @brief Poll USB device. Call is made for each connected USB device on USBHost.task() call.
+    virtual uint32_t Poll()			= 0;
 
-	//! @brief Retrieve USB device address.
-	virtual uint32_t GetAddress()	= 0;
+    //! @brief Retrieve USB device address.
+    virtual uint32_t GetAddress()	= 0;
 };
 
 struct usb_dev {
-	int ihandle;
-	uint8_t evtype_bitmask[(EV_MAX + 7) / 8];
-	struct usb_dev * pnext;
-	struct usb_dev * pprev;
+    int ihandle;
+    uint8_t evtype_bitmask[(EV_MAX + 7) / 8];
+    struct usb_dev *pnext;
+    struct usb_dev *pprev;
 };
 
 class HIDReportParser;
@@ -170,103 +164,95 @@ class KeyboardController;
  *
  * \brief Main USB host class.
  */
-class USBHost
-{
-    private:
-	AddressPoolImpl<USB_NUMDEVICES>		addrPool;
-	USBDeviceConfig*			devConfig[USB_NUMDEVICES];
-	class KeyboardController		*_pCtrl;
-	HIDReportParser*			devParsers[USB_NUMDEVICES];
-	uint32_t				devConfigIndex;
-	uint32_t				bmHubPre;
-	struct usb_dev 				*phead;
-	uint32_t				input_count;
-	uint32_t				ctReportParsers;
+class USBHost {
+private:
+    AddressPoolImpl<USB_NUMDEVICES>		addrPool;
+    USBDeviceConfig			*devConfig[USB_NUMDEVICES];
+    class KeyboardController		*_pCtrl;
+    HIDReportParser			*devParsers[USB_NUMDEVICES];
+    uint32_t				devConfigIndex;
+    uint32_t				bmHubPre;
+    struct usb_dev 				*phead;
+    uint32_t				input_count;
+    uint32_t				ctReportParsers;
 
-    public:
-        USBHost(void);
+public:
+    USBHost(void);
 
-	//void SetHubPreMask()	{ bmHubPre |= bmHUBPRE; };
-	//void ResetHubPreMask()	{ bmHubPre &= (~bmHUBPRE); };
+    //void SetHubPreMask()	{ bmHubPre |= bmHUBPRE; };
+    //void ResetHubPreMask()	{ bmHubPre &= (~bmHUBPRE); };
 
-	AddressPool& GetAddressPool()
-	{
-		return (AddressPool&)addrPool;
-	};
+    AddressPool &GetAddressPool() {
+        return (AddressPool &)addrPool;
+    };
 
-	uint32_t RegisterDeviceClass(USBDeviceConfig *pdev)
-	{
-		for (uint32_t i = 0; i < USB_NUMDEVICES; ++i)
-		{
-			if (!devConfig[i])
-			{
-				devConfig[i] = pdev;
-				return 0;
-			}
-		}
-		return USB_ERROR_UNABLE_TO_REGISTER_DEVICE_CLASS;
-	};
+    uint32_t RegisterDeviceClass(USBDeviceConfig *pdev) {
+        for (uint32_t i = 0; i < USB_NUMDEVICES; ++i) {
+            if (!devConfig[i]) {
+                devConfig[i] = pdev;
+                return 0;
+            }
+        }
 
-	uint32_t RegisterHIDReportParser(HIDReportParser *pdev)
-		{
-			for (uint32_t i = 0; i < USB_NUMDEVICES; ++i)
-			{
-				if (!devParsers[i])
-				{
-					devParsers[i] = pdev;
-					ctReportParsers++;
-					return 0;
-				}
-			}
-			return USB_ERROR_UNABLE_TO_REGISTER_DEVICE_CLASS;
-	};
+        return USB_ERROR_UNABLE_TO_REGISTER_DEVICE_CLASS;
+    };
 
-	// Horrible short-cut no time to work this out
+    uint32_t RegisterHIDReportParser(HIDReportParser *pdev) {
+        for (uint32_t i = 0; i < USB_NUMDEVICES; ++i) {
+            if (!devParsers[i]) {
+                devParsers[i] = pdev;
+                ctReportParsers++;
+                return 0;
+            }
+        }
 
-	uint32_t RegisterKBEventCB(KeyboardController * pCtrl)
-	{
-	    _pCtrl = pCtrl;
-	    return 0;
-	}
+        return USB_ERROR_UNABLE_TO_REGISTER_DEVICE_CLASS;
+    };
 
-	void ForEachUsbDevice(UsbDeviceHandleFunc pfunc)
-	{
-		addrPool.ForEachUsbDevice(pfunc);
-	};
+    // Horrible short-cut no time to work this out
 
-	uint32_t getUsbTaskState(void);
-	void setUsbTaskState(uint32_t state);
+    uint32_t RegisterKBEventCB(KeyboardController *pCtrl) {
+        _pCtrl = pCtrl;
+        return 0;
+    }
 
-	EpInfo* getEpInfoEntry(uint32_t addr, uint32_t ep);
-	uint32_t setEpInfoEntry(uint32_t addr, uint32_t epcount, EpInfo* eprecord_ptr);
+    void ForEachUsbDevice(UsbDeviceHandleFunc pfunc) {
+        addrPool.ForEachUsbDevice(pfunc);
+    };
 
-	/* Control requests */
-	uint32_t getDevDescr(uint32_t addr, uint32_t ep, uint32_t nbytes, uint8_t* dataptr);
-	uint32_t getConfDescr(uint32_t addr, uint32_t ep, uint32_t nbytes, uint32_t conf, uint8_t* dataptr);
-	uint32_t getConfDescr(uint32_t addr, uint32_t ep, uint32_t conf, USBReadParser *p);
-	uint32_t getStrDescr(uint32_t addr, uint32_t ep, uint32_t nbytes, uint8_t index, uint16_t langid, uint8_t* dataptr);
-	uint32_t setAddr(uint32_t oldaddr, uint32_t ep, uint32_t newaddr);
-	uint32_t setConf(uint32_t addr, uint32_t ep, uint32_t conf_value);
-	uint32_t ctrlReq(uint32_t addr, uint32_t ep, uint8_t bmReqType, uint8_t bRequest, uint8_t wValLo, uint8_t wValHi,
-						uint16_t wInd, uint16_t total, uint32_t nbytes, uint8_t* dataptr, USBReadParser *p);
+    uint32_t getUsbTaskState(void);
+    void setUsbTaskState(uint32_t state);
 
-        /* Transfer requests */
-        uint32_t inTransfer(uint32_t addr, uint32_t ep, uint32_t *nbytesptr, uint8_t* data);
-	uint32_t outTransfer(uint32_t addr, uint32_t ep, uint32_t nbytes, uint8_t* data);
-        uint32_t dispatchPkt(uint32_t token, uint32_t ep, uint32_t nak_limit);
+    EpInfo *getEpInfoEntry(uint32_t addr, uint32_t ep);
+    uint32_t setEpInfoEntry(uint32_t addr, uint32_t epcount, EpInfo *eprecord_ptr);
 
-        void Task(void);
+    /* Control requests */
+    uint32_t getDevDescr(uint32_t addr, uint32_t ep, uint32_t nbytes, uint8_t *dataptr);
+    uint32_t getConfDescr(uint32_t addr, uint32_t ep, uint32_t nbytes, uint32_t conf, uint8_t *dataptr);
+    uint32_t getConfDescr(uint32_t addr, uint32_t ep, uint32_t conf, USBReadParser *p);
+    uint32_t getStrDescr(uint32_t addr, uint32_t ep, uint32_t nbytes, uint8_t index, uint16_t langid, uint8_t *dataptr);
+    uint32_t setAddr(uint32_t oldaddr, uint32_t ep, uint32_t newaddr);
+    uint32_t setConf(uint32_t addr, uint32_t ep, uint32_t conf_value);
+    uint32_t ctrlReq(uint32_t addr, uint32_t ep, uint8_t bmReqType, uint8_t bRequest, uint8_t wValLo, uint8_t wValHi,
+                     uint16_t wInd, uint16_t total, uint32_t nbytes, uint8_t *dataptr, USBReadParser *p);
 
-	uint32_t DefaultAddressing(uint32_t parent, uint32_t port, uint32_t lowspeed);
-	uint32_t Configuring(uint32_t parent, uint32_t port, uint32_t lowspeed);
-	uint32_t ReleaseDevice(uint32_t addr);
+    /* Transfer requests */
+    uint32_t inTransfer(uint32_t addr, uint32_t ep, uint32_t *nbytesptr, uint8_t *data);
+    uint32_t outTransfer(uint32_t addr, uint32_t ep, uint32_t nbytes, uint8_t *data);
+    uint32_t dispatchPkt(uint32_t token, uint32_t ep, uint32_t nak_limit);
 
-    private:
-        void init();
-	uint32_t setPipeAddress(uint32_t addr, uint32_t ep, EpInfo **ppep, uint32_t &nak_limit);
-	uint32_t OutTransfer(EpInfo *pep, uint32_t nak_limit, uint32_t nbytes, uint8_t *data);
-	uint32_t InTransfer(EpInfo *pep, uint32_t nak_limit, uint32_t *nbytesptr, uint8_t* data);
-	int addUSBDevEntry(int ihandle, uint8_t * evtype_bitmask);
+    void Task(void);
+
+    uint32_t DefaultAddressing(uint32_t parent, uint32_t port, uint32_t lowspeed);
+    uint32_t Configuring(uint32_t parent, uint32_t port, uint32_t lowspeed);
+    uint32_t ReleaseDevice(uint32_t addr);
+
+private:
+    void init();
+    uint32_t setPipeAddress(uint32_t addr, uint32_t ep, EpInfo **ppep, uint32_t &nak_limit);
+    uint32_t OutTransfer(EpInfo *pep, uint32_t nak_limit, uint32_t nbytes, uint8_t *data);
+    uint32_t InTransfer(EpInfo *pep, uint32_t nak_limit, uint32_t *nbytesptr, uint8_t *data);
+    int addUSBDevEntry(int ihandle, uint8_t *evtype_bitmask);
 };
 
 #endif /* USB_H_INCLUDED */

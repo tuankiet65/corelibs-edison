@@ -22,37 +22,38 @@
 #include <hidboot.h>
 
 enum MouseButton {
-	LEFT_BUTTON   = 0x01,
-	MIDDLE_BUTTON = 0x02,
-	RIGHT_BUTTON  = 0x04
+    LEFT_BUTTON   = 0x01,
+    MIDDLE_BUTTON = 0x02,
+    RIGHT_BUTTON  = 0x04
 };
 
-class MouseController : public MouseReportParser
-{
+class MouseController : public MouseReportParser {
 public:
-  MouseController(USBHost &usb) : hostMouse(&usb), dx(0), dy(0), buttons(0) {
-    hostMouse.SetReportParser(0, this);
-    //usb.RegisterHIDReportParser(this);
-  };
+    MouseController(USBHost &usb) : hostMouse(&usb), dx(0), dy(0), buttons(0) {
+        hostMouse.SetReportParser(0, this);
+        //usb.RegisterHIDReportParser(this);
+    };
 
-  bool getButton(MouseButton button) { return (buttons & button) == button; };
-  int getXChange();
-  int getYChange();
-  // int getWheelChange(); // Not implemented
+    bool getButton(MouseButton button) {
+        return (buttons & button) == button;
+    };
+    int getXChange();
+    int getYChange();
+    // int getWheelChange(); // Not implemented
 
 protected:
-  virtual void OnMouseMove(MOUSEINFO *mi);
-  virtual void OnLeftButtonUp(MOUSEINFO *mi);
-  virtual void OnLeftButtonDown(MOUSEINFO *mi);
-  virtual void OnMiddleButtonUp(MOUSEINFO *mi);
-  virtual void OnMiddleButtonDown(MOUSEINFO *mi);
-  virtual void OnRightButtonUp(MOUSEINFO *mi);
-  virtual void OnRightButtonDown(MOUSEINFO *mi);
+    virtual void OnMouseMove(MOUSEINFO *mi);
+    virtual void OnLeftButtonUp(MOUSEINFO *mi);
+    virtual void OnLeftButtonDown(MOUSEINFO *mi);
+    virtual void OnMiddleButtonUp(MOUSEINFO *mi);
+    virtual void OnMiddleButtonDown(MOUSEINFO *mi);
+    virtual void OnRightButtonUp(MOUSEINFO *mi);
+    virtual void OnRightButtonDown(MOUSEINFO *mi);
 
 private:
-  HIDBoot<HID_PROTOCOL_MOUSE> hostMouse;
-  int dx, dy;
-  int buttons;
+    HIDBoot<HID_PROTOCOL_MOUSE> hostMouse;
+    int dx, dy;
+    int buttons;
 };
 
 #endif

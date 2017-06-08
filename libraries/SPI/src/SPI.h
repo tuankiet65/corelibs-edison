@@ -44,29 +44,29 @@
 
 class SPIClass {
 public:
-  SPIClass();  // Constructor
+    SPIClass();  // Constructor
 
-  byte transfer(byte _data);
-  void transferBuffer(const uint8_t *, uint8_t *, uint32_t);
+    byte transfer(byte _data);
+    void transferBuffer(const uint8_t *, uint8_t *, uint32_t);
 
-  // SPI Configuration methods
+    // SPI Configuration methods
 
-  void attachInterrupt();
-  void detachInterrupt(); // Default
+    void attachInterrupt();
+    void detachInterrupt(); // Default
 
-  void begin(); // Default
-  void end();
+    void begin(); // Default
+    void end();
 
-  void setBitOrder(uint8_t);
-  void setDataMode(uint8_t);
-  void setClockDivider(uint8_t);
-  void setClockSpeed(uint32_t);
+    void setBitOrder(uint8_t);
+    void setDataMode(uint8_t);
+    void setClockDivider(uint8_t);
+    void setClockSpeed(uint32_t);
 
 private:
-  static int fd;
-  uint8_t mode;
-  uint8_t bitOrder;
-  uint8_t clkDiv;
+    static int fd;
+    uint8_t mode;
+    uint8_t bitOrder;
+    uint8_t clkDiv;
 };
 
 extern SPIClass SPI;

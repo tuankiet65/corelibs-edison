@@ -96,8 +96,7 @@ _Pragma("pack(1)")
 /* descriptor data structures */
 
 /* Device descriptor structure */
-typedef struct
-{
+typedef struct {
     uint8_t		bLength;               // Length of this descriptor.
     uint8_t		bDescriptorType;       // DEVICE descriptor type (USB_DESCRIPTOR_DEVICE).
     uint16_t	bcdUSB;				   // USB Spec Release Number (BCD).
@@ -115,8 +114,7 @@ typedef struct
 } USB_DEVICE_DESCRIPTOR;
 
 /* Configuration descriptor structure */
-typedef struct
-{
+typedef struct {
     uint8_t bLength;               // Length of this descriptor.
     uint8_t bDescriptorType;       // CONFIGURATION descriptor type (USB_DESCRIPTOR_CONFIGURATION).
     uint16_t wTotalLength;          // Total length of all descriptors for this configuration.
@@ -128,8 +126,7 @@ typedef struct
 } USB_CONFIGURATION_DESCRIPTOR;
 
 /* Interface descriptor structure */
-typedef struct
-{
+typedef struct {
     uint8_t bLength;               // Length of this descriptor.
     uint8_t bDescriptorType;       // INTERFACE descriptor type (USB_DESCRIPTOR_INTERFACE).
     uint8_t bInterfaceNumber;      // Number of this interface (0 based).
@@ -142,8 +139,7 @@ typedef struct
 } USB_INTERFACE_DESCRIPTOR;
 
 /* Endpoint descriptor structure */
-typedef struct
-{
+typedef struct {
     uint8_t bLength;               // Length of this descriptor.
     uint8_t bDescriptorType;       // ENDPOINT descriptor type (USB_DESCRIPTOR_ENDPOINT).
     uint8_t bEndpointAddress;      // Endpoint address. Bit 7 indicates direction (0=OUT, 1=IN).
@@ -154,20 +150,18 @@ typedef struct
 
 
 /* HID descriptor */
-typedef struct
-{
+typedef struct {
     uint8_t		bLength;
-	uint8_t		bDescriptorType;
-	uint16_t	bcdHID;					// HID class specification release
+    uint8_t		bDescriptorType;
+    uint16_t	bcdHID;					// HID class specification release
     uint8_t		bCountryCode;
-	uint8_t		bNumDescriptors;		// Number of additional class specific descriptors
-	uint8_t		bDescrType;				// Type of class descriptor
+    uint8_t		bNumDescriptors;		// Number of additional class specific descriptors
+    uint8_t		bDescrType;				// Type of class descriptor
     uint16_t	wDescriptorLength;		// Total size of the Report descriptor
 } USB_HID_DESCRIPTOR;
 
-typedef struct
-{
-	uint8_t		bDescrType;				// Type of class descriptor
+typedef struct {
+    uint8_t		bDescrType;				// Type of class descriptor
     uint16_t	wDescriptorLength;		// Total size of the Report descriptor
 } HID_CLASS_DESCRIPTOR_LEN_AND_TYPE;
 

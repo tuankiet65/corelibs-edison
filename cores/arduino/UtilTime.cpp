@@ -34,25 +34,19 @@ static float cpufreq = 0;
 #define MY_TRACE_PREFIX "time"
 
 #if 0
-unsigned long micros2( void )
-{
-
-  struct timespec t;
-  t.tv_sec = t.tv_nsec = 0;
-
-  /* Considering the system does not suspend CLOCK_REALTIME is welcome.
-     However, if in the future our system suspend, we need to replace
-     CLOCK_REALTIME by CLOCK_BOOTTIME and apply the proper patches in
-     the kernel. */
-
-  clock_gettime(CLOCK_REALTIME, &t);
-  return (unsigned long)(t.tv_sec)*1000000L + t.tv_nsec / 1000L ;
-
+unsigned long micros2( void ) {
+    struct timespec t;
+    t.tv_sec = t.tv_nsec = 0;
+    /* Considering the system does not suspend CLOCK_REALTIME is welcome.
+       However, if in the future our system suspend, we need to replace
+       CLOCK_REALTIME by CLOCK_BOOTTIME and apply the proper patches in
+       the kernel. */
+    clock_gettime(CLOCK_REALTIME, &t);
+    return (unsigned long)(t.tv_sec) * 1000000L + t.tv_nsec / 1000L ;
 }
 #endif
 
-static inline uint64_t rdtsc(void)
-{
+static inline uint64_t rdtsc(void) {
     uint32_t lo, hi;
     uint64_t returnVal;
     /* We cannot use "=A", since this would use %rax on x86_64 */
@@ -60,26 +54,20 @@ static inline uint64_t rdtsc(void)
     returnVal = hi;
     returnVal <<= 32;
     returnVal |= lo;
-
     return returnVal;
 }
 
-void delay(unsigned long ms)
-{
+void delay(unsigned long ms) {
     usleep(ms * 1000);
 }
 
-void delayMicroseconds(unsigned int us)
-{
+void delayMicroseconds(unsigned int us) {
     usleep( us );
     return;
-
 }
 
-unsigned long micros( void )
-{
+unsigned long micros( void ) {
     uint64_t tsc_cur = rdtsc(), diff = 0, divisor = 0;
-
     /*
     This function returns a 32-bit value representing the microseconds
     since the sketch started running on IA-32 Arduino boards.
@@ -97,55 +85,51 @@ unsigned long micros( void )
 
     Microseconds representation at 32 bits will recycle about every 4294 seconds at 400mhz.
     */
-
     divisor = (cpufreq );
     diff = tsc_cur - tsc_init;
-
     return (unsigned long) (diff / divisor);
 }
 
-unsigned long millis( void )
-{
+unsigned long millis( void ) {
     /* similar to the micros() function, it returns ms since sketch start up time.
      The underlying counter is a 64 bit value, but the representation of millis
      as unsigned 32-bits means it recycles in ~ 1190 hours.*/
-
     uint64_t tsc_cur = rdtsc(), diff = 0, divisor = 0;
     divisor = (cpufreq * 1000);
     diff = tsc_cur - tsc_init;
-
     return (unsigned long) ( (diff / divisor) );
-
 }
 
 
 
 /* TSC snapshot */
-int timeInit(void)
-{
+int timeInit(void) {
     int cpufreq_fd, ret;
     char buf[0x400];
-    char * str = 0, * str2 = 0;
-    char * mhz_str = "cpu MHz\t\t: ";
-
+    char *str = 0, * str2 = 0;
+    char *mhz_str = "cpu MHz\t\t: ";
     /* Grab initial TSC snapshot */
     tsc_init = rdtsc();
-
     cpufreq_fd = open("/proc/cpuinfo", O_RDONLY);
-    if( cpufreq_fd < 0){
+
+    if ( cpufreq_fd < 0) {
         fprintf(stderr, "unable to open /proc/cpuinfo\n");
         return -1;
     }
+
     memset(buf, 0x00, sizeof(buf));
     ret = read(cpufreq_fd, buf, sizeof(buf));
-    if ( ret < 0 ){
+
+    if ( ret < 0 ) {
         fprintf(stderr, "unable to read cpuinfo !\n");
         close(cpufreq_fd);
         return -1;
     }
+
     close(cpufreq_fd);
     str = strstr(buf, mhz_str);
-    if (!str){
+
+    if (!str) {
         fprintf(stderr, "Buffer %s does not contain CPU frequency info !\n", buf);
         return -1;
     }
@@ -153,21 +137,19 @@ int timeInit(void)
     str += strlen(mhz_str);
     str2 = str;
 
-    while(str2 < buf  + sizeof(buf)-1 && *str2 != '\n'){
+    while (str2 < buf  + sizeof(buf) - 1 && *str2 != '\n') {
         str2++;
     }
-    if(str2 == buf + sizeof(buf-1) && *str2 !='\n'){
+
+    if (str2 == buf + sizeof(buf - 1) && *str2 != '\n') {
         fprintf(stderr, "malformed cpufreq string %s\n", str);
         return -1;
     }
+
     *str2 = '\0';
     cpufreq = atof(str);
-
-
     printf("cpufrequency is %f mhz\n", cpufreq);
-
     /* Calculate nanoseconds per clock */
-    clocks_per_ns = 1000/cpufreq;
-
+    clocks_per_ns = 1000 / cpufreq;
     printf("nanoseconds per clock %f\n", clocks_per_ns);
 }

@@ -50,230 +50,220 @@
 EthernetUDP::EthernetUDP() : _sock(-1) {}
 
 /* Start EthernetUDP socket, listening at local port PORT */
-uint8_t EthernetUDP::begin(uint16_t port)
-{
+uint8_t EthernetUDP::begin(uint16_t port) {
+    _port = port;
+    _remaining = 0;
+    int ret = socket(AF_INET, SOCK_DGRAM, 0);
 
-	_port = port;
-	_remaining = 0;
-	int ret = socket(AF_INET, SOCK_DGRAM, 0);
-	if ( ret < 0){
-		trace_error("%s fail init UDP socket!", __func__);
-		return 0;
-	}
+    if ( ret < 0) {
+        trace_error("%s fail init UDP socket!", __func__);
+        return 0;
+    }
 
-	_sock = ret;
-	if (listen() != 0){
-		trace_error("unable to listen");
-		close(_sock);
-		return 0;
-	}
+    _sock = ret;
 
-	int on=1;
-	ret = ioctl(_sock, FIONBIO, (char *)&on);
-	if (ret < 0) {
-		trace_error("ioctl() failed");
-		close(_sock);
-		return 0;
-	}
+    if (listen() != 0) {
+        trace_error("unable to listen");
+        close(_sock);
+        return 0;
+    }
 
+    int on = 1;
+    ret = ioctl(_sock, FIONBIO, (char *)&on);
 
-	return 1;
+    if (ret < 0) {
+        trace_error("ioctl() failed");
+        close(_sock);
+        return 0;
+    }
+
+    return 1;
 }
 
-int EthernetUDP::listen()
-{
-	bzero(&_sin,sizeof(_sin));
-	_sin.sin_family = AF_INET;
-	_sin.sin_addr.s_addr=htonl(INADDR_ANY);
-	_sin.sin_port=htons(_port);
-
-	return bind(_sock,(struct sockaddr *)&_sin,sizeof(_sin));
+int EthernetUDP::listen() {
+    bzero(&_sin, sizeof(_sin));
+    _sin.sin_family = AF_INET;
+    _sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    _sin.sin_port = htons(_port);
+    return bind(_sock, (struct sockaddr *)&_sin, sizeof(_sin));
 }
 
 /* return number of bytes available in the current packet,
    will return zero if parsePacket hasn't been called yet */
 int EthernetUDP::available() {
-  	struct pollfd ufds;
-	int ret = 0;
-	extern int errno;
-	int    timeout = 0;	// milliseconds
+    struct pollfd ufds;
+    int ret = 0;
+    extern int errno;
+    int    timeout = 0;	// milliseconds
 
-	if (_sock == -1)
-		return 0;
+    if (_sock == -1) {
+        return 0;
+    }
 
-	ufds.fd = _sock;
-	ufds.events = POLLIN;
-	ufds.revents = 0;
+    ufds.fd = _sock;
+    ufds.events = POLLIN;
+    ufds.revents = 0;
+    ret = poll(&ufds, 1, timeout);
 
-	ret = poll(&ufds, 1, timeout);
-	if ( ret < 0 ){
-		trace_error("%s error on poll errno %d", __func__, errno);
-		return 0;
-	}
-	if( ret == 0)
-		return 0;
+    if ( ret < 0 ) {
+        trace_error("%s error on poll errno %d", __func__, errno);
+        return 0;
+    }
 
-	// only return available if bytes are present to be read
-	if(ret > 0 && ufds.revents&POLLIN){
-		int bytes = 0;
-		ret = ioctl(_sock, FIONREAD, &bytes);
-		if ( ret < 0){
-				trace_error("ioctl fail on socket!");
-				return 0;
-		}
-		if ( ret == 0 && bytes != 0){
-			return bytes;
-		}
-	}
-	return 0;
+    if ( ret == 0) {
+        return 0;
+    }
+
+    // only return available if bytes are present to be read
+    if (ret > 0 && ufds.revents & POLLIN) {
+        int bytes = 0;
+        ret = ioctl(_sock, FIONREAD, &bytes);
+
+        if ( ret < 0) {
+            trace_error("ioctl fail on socket!");
+            return 0;
+        }
+
+        if ( ret == 0 && bytes != 0) {
+            return bytes;
+        }
+    }
+
+    return 0;
 }
 
 /* Release any resources being used by this EthernetUDP instance */
-void EthernetUDP::stop()
-{
-	if (_sock == -1)
-		return;
+void EthernetUDP::stop() {
+    if (_sock == -1) {
+        return;
+    }
 
-	close(_sock);
-	_sock = -1;
-
-	//EthernetClass::_server_port[_sock] = 0;
-	EthernetClass::_server_port[0] = 0;
- 	//_sock = MAX_SOCK_NUM;
- 	//_sock = -1;
+    close(_sock);
+    _sock = -1;
+    //EthernetClass::_server_port[_sock] = 0;
+    EthernetClass::_server_port[0] = 0;
+    //_sock = MAX_SOCK_NUM;
+    //_sock = -1;
 }
 
-int EthernetUDP::beginPacket(const char *host, uint16_t port)
-{
-	// Look up the host first
+int EthernetUDP::beginPacket(const char *host, uint16_t port) {
+    // Look up the host first
+    int ret = 0;
+    extern int errno;
+    struct hostent *hp;
 
-	int ret = 0;
-	extern int errno;
-	struct hostent *hp;
+    if (host == NULL || _sock == -1) {
+        return -EINVAL;
+    }
 
-	if (host == NULL || _sock == -1)
-		return -EINVAL;
+    hp = gethostbyname(host);
+    _offset = 0;
 
-	hp = gethostbyname(host);
-	_offset = 0;
-	if (hp == NULL){
-			trace_error("gethostbyname %s fail!", host);
-			return -ENODEV;
-	}
-	memcpy(&_sin.sin_addr, hp->h_addr, sizeof(_sin.sin_addr));
-	_sin.sin_port = htons(port); //PL : probably useful to have this...
-	return 0;
+    if (hp == NULL) {
+        trace_error("gethostbyname %s fail!", host);
+        return -ENODEV;
+    }
 
+    memcpy(&_sin.sin_addr, hp->h_addr, sizeof(_sin.sin_addr));
+    _sin.sin_port = htons(port); //PL : probably useful to have this...
+    return 0;
 }
 
-int EthernetUDP::beginPacket(IPAddress ip, uint16_t port)
-{
-	_offset = 0 ;
-
-	_sin.sin_addr.s_addr = ip._sin.sin_addr.s_addr;
-	_sin.sin_family = AF_INET;
-  	_sin.sin_port = htons(port);
-
-  	return 0;
+int EthernetUDP::beginPacket(IPAddress ip, uint16_t port) {
+    _offset = 0 ;
+    _sin.sin_addr.s_addr = ip._sin.sin_addr.s_addr;
+    _sin.sin_family = AF_INET;
+    _sin.sin_port = htons(port);
+    return 0;
 }
 
-int EthernetUDP::endPacket()
-{
-	if ( _sock == -1 )
-		return -1;
-	trace_debug("%s called", __func__);
-	return sendUDP();
+int EthernetUDP::endPacket() {
+    if ( _sock == -1 ) {
+        return -1;
+    }
+
+    trace_debug("%s called", __func__);
+    return sendUDP();
 }
 
-int EthernetUDP::sendUDP()
-{
-	return sendto(_sock, _buffer, _offset, 0, (struct sockaddr*)&_sin, sizeof(_sin));
+int EthernetUDP::sendUDP() {
+    return sendto(_sock, _buffer, _offset, 0, (struct sockaddr *)&_sin, sizeof(_sin));
 }
 
-size_t EthernetUDP::write(uint8_t byte)
-{
-	return write(&byte, 1);
+size_t EthernetUDP::write(uint8_t byte) {
+    return write(&byte, 1);
 }
 
-int EthernetUDP::bufferData(const uint8_t *buffer, size_t size)
-{
-	int written_bytes =  0;
-	if  (UDP_TX_PACKET_MAX_SIZE - _offset < size) {
-		written_bytes =  UDP_TX_PACKET_MAX_SIZE - _offset;
-	} else {
-		written_bytes = size;
-	}
-	memcpy(_buffer + _offset, buffer, written_bytes);
-	_offset += written_bytes;
+int EthernetUDP::bufferData(const uint8_t *buffer, size_t size) {
+    int written_bytes =  0;
+
+    if  (UDP_TX_PACKET_MAX_SIZE - _offset < size) {
+        written_bytes =  UDP_TX_PACKET_MAX_SIZE - _offset;
+    } else {
+        written_bytes = size;
+    }
+
+    memcpy(_buffer + _offset, buffer, written_bytes);
+    _offset += written_bytes;
 }
 
-size_t EthernetUDP::write(const uint8_t *buffer, size_t size)
-{
-	uint16_t bytes_written = bufferData(buffer, size);
-	return bytes_written;
+size_t EthernetUDP::write(const uint8_t *buffer, size_t size) {
+    uint16_t bytes_written = bufferData(buffer, size);
+    return bytes_written;
 }
 
-int EthernetUDP::parsePacket()
-{
-	// discard any remaining bytes in the last packet
-	flush();
-	_remaining = 0;
-	_remaining = available();
-	return _remaining;
+int EthernetUDP::parsePacket() {
+    // discard any remaining bytes in the last packet
+    flush();
+    _remaining = 0;
+    _remaining = available();
+    return _remaining;
 }
 
-int EthernetUDP::read()
-{
-	uint8_t b;
-	if ( recv(_sock, &b, 1,0) > 0 ) {
-		return b;
-	} else {
-		// No data available
-		return -1;
-	}
+int EthernetUDP::read() {
+    uint8_t b;
+
+    if ( recv(_sock, &b, 1, 0) > 0 ) {
+        return b;
+    } else {
+        // No data available
+        return -1;
+    }
 }
 
-int EthernetUDP::read(unsigned char* buffer, size_t len)
-{
+int EthernetUDP::read(unsigned char *buffer, size_t len) {
+    if (_remaining > 0) {
+        int got;
 
-	if (_remaining > 0) {
+        if (_remaining <= len) {
+            // data should fit in the buffer
+            got = recvfrom(_sock, buffer, _remaining, 0, NULL, NULL);
+        } else {
+            // too much data for the buffer,
+            // grab as much as will fit
+            got = recvfrom(_sock, buffer, len, 0, NULL, NULL);
+        }
 
-		int got;
+        if (got > 0) {
+            _remaining -= got;
+            return got;
+        }
+    }
 
-		if (_remaining <= len) {
-			// data should fit in the buffer
-			got = recvfrom(_sock, buffer, _remaining, 0, NULL, NULL);
-		} else {
-			// too much data for the buffer,
-			// grab as much as will fit
-			got = recvfrom(_sock, buffer, len, 0, NULL, NULL);
-		}
-
-		if (got > 0) {
-			_remaining -= got;
-			return got;
-		}
-
-	}
-
-	// If we get here, there's no data available or recv failed
-	return -1;
-
+    // If we get here, there's no data available or recv failed
+    return -1;
 }
 
-int EthernetUDP::peek()
-{
-	return -1;
+int EthernetUDP::peek() {
+    return -1;
 }
 
-void EthernetUDP::flush()
-{
-	// could this fail (loop endlessly) if _remaining > 0 and recv in read fails?
-	// should only occur if recv fails after telling us the data is there, lets
-	// hope the w5100 always behaves :)
-
-	while (_remaining) {
-		read();
-	}
+void EthernetUDP::flush() {
+    // could this fail (loop endlessly) if _remaining > 0 and recv in read fails?
+    // should only occur if recv fails after telling us the data is there, lets
+    // hope the w5100 always behaves :)
+    while (_remaining) {
+        read();
+    }
 }
 

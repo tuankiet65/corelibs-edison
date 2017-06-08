@@ -27,22 +27,20 @@ extern "C" {
 #endif
 
 /* Types used for the tables below */
-typedef struct _PwmDescription
-{
-        uint32_t		ulPWMId;		// Identitiy in PWMLib as a PWM
-        uint32_t		ulArduinoId;		// Arduino ID
-        int			iHandleEnable;		// Persistent handle - open once - use many times
-        int			iHandleDuty;		// Persistent handle - open once - use many times
-        uint32_t		pwmChPinId;		// PWM channel Linux pin ID
-        int			iHandlePeriod;		// Persistent handle - open once - use many times
+typedef struct _PwmDescription {
+    uint32_t		ulPWMId;		// Identitiy in PWMLib as a PWM
+    uint32_t		ulArduinoId;		// Arduino ID
+    int			iHandleEnable;		// Persistent handle - open once - use many times
+    int			iHandleDuty;		// Persistent handle - open once - use many times
+    uint32_t		pwmChPinId;		// PWM channel Linux pin ID
+    int			iHandlePeriod;		// Persistent handle - open once - use many times
 
 } PwmDescription;
 
 /* Types used for the tables below */
-typedef struct _AdcDescription
-{
-	uint32_t		ulArduinoId;		// Arduino
- 	int			iHandle;		// Persistent handle - open once - use many times
+typedef struct _AdcDescription {
+    uint32_t		ulArduinoId;		// Arduino
+    int			iHandle;		// Persistent handle - open once - use many times
 } AdcDescription;
 
 void pwmInit(void);

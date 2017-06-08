@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __OS_ABSTRACT_H__
 #define __OS_ABSTRACT_H__
 
-void init(int argc, char * argv[]);
+void init(int argc, char *argv[]);
 void setup(void);
 void loop(void);
 

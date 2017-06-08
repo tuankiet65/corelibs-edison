@@ -1,5 +1,5 @@
 /*
-variant.h major function prototypes and definition 
+variant.h major function prototypes and definition
 Copyright (C) 2014 Intel Corporation
 
 This library is free software; you can redistribute it and/or
@@ -85,8 +85,8 @@ extern TTYUARTClass Serial1;
 
 /* Mux selector definition */
 struct mux_sel {
-	uint32_t sel_id;			// GPIOLib ID
-	uint32_t sel_val;
+    uint32_t sel_id;			// GPIOLib ID
+    uint32_t sel_val;
 };
 
 /* Mux selects (Arduino Pin ID).  */

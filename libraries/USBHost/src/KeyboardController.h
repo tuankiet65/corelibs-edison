@@ -22,33 +22,39 @@
 #include <hidboot.h>
 
 enum KeyboardModifiers {
-	LeftCtrl = 1,
-	LeftShift = 2,
-	Alt = 4,
-	LeftCmd = 8,
-	RightCtrl = 16,
-	RightShift = 32,
-	AltGr = 64,
-	RightCmd = 128
+    LeftCtrl = 1,
+    LeftShift = 2,
+    Alt = 4,
+    LeftCmd = 8,
+    RightCtrl = 16,
+    RightShift = 32,
+    AltGr = 64,
+    RightCmd = 128
 };
 
 class KeyboardController : public KeyboardReportParser {
 private:
-	HIDBoot<HID_PROTOCOL_KEYBOARD> hostKeyboard;
-	uint8_t key, keyOem, modifiers;
+    HIDBoot<HID_PROTOCOL_KEYBOARD> hostKeyboard;
+    uint8_t key, keyOem, modifiers;
 
 public:
-	KeyboardController(USBHost &usb) : hostKeyboard(&usb), key(0), keyOem(0), modifiers(0) {
-		//hostKeyboard.SetReportParser(0, this);
-		usb.RegisterKBEventCB(this);
-	};
+    KeyboardController(USBHost &usb) : hostKeyboard(&usb), key(0), keyOem(0), modifiers(0) {
+        //hostKeyboard.SetReportParser(0, this);
+        usb.RegisterKBEventCB(this);
+    };
 
-	uint8_t getKey()       { return key; };
-	uint8_t getModifiers() { return modifiers; };
-	uint8_t getOemKey()    { return keyOem; };
+    uint8_t getKey()       {
+        return key;
+    };
+    uint8_t getModifiers() {
+        return modifiers;
+    };
+    uint8_t getOemKey()    {
+        return keyOem;
+    };
 
-	virtual void OnKeyDown(uint8_t mod, uint8_t key);
-	virtual void OnKeyUp(uint8_t mod, uint8_t key);
+    virtual void OnKeyDown(uint8_t mod, uint8_t key);
+    virtual void OnKeyUp(uint8_t mod, uint8_t key);
 
 };
 

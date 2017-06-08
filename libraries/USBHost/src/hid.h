@@ -98,11 +98,10 @@ e-mail   :  support@circuitsathome.com
 /**
  * \brief HidItemPrefix definition.
  */
-struct HidItemPrefix				// Not used
-{
-	uint8_t		bSize : 2;
-	uint8_t		bType : 2;
-	uint8_t		bTag  : 4;
+struct HidItemPrefix {			// Not used
+    uint8_t		bSize : 2;
+    uint8_t		bType : 2;
+    uint8_t		bTag  : 4;
 };
 
 #define HID_ITEM_TYPE_MAIN							0
@@ -131,16 +130,15 @@ struct HidItemPrefix				// Not used
 /**
  * \brief MainItemIOFeature definition.
  */
-struct MainItemIOFeature			// Not used
-{
-	uint8_t		bmIsConstantOrData			: 1;
-	uint8_t		bmIsArrayOrVariable			: 1;
-	uint8_t		bmIsRelativeOrAbsolute		: 1;
-	uint8_t		bmIsWrapOrNoWrap			: 1;
-	uint8_t		bmIsNonLonearOrLinear		: 1;
-	uint8_t		bmIsNoPreferedOrPrefered	: 1;
-	uint8_t		bmIsNullOrNoNull			: 1;
-	uint8_t		bmIsVolatileOrNonVolatile	: 1;
+struct MainItemIOFeature {		// Not used
+    uint8_t		bmIsConstantOrData			: 1;
+    uint8_t		bmIsArrayOrVariable			: 1;
+    uint8_t		bmIsRelativeOrAbsolute		: 1;
+    uint8_t		bmIsWrapOrNoWrap			: 1;
+    uint8_t		bmIsNonLonearOrLinear		: 1;
+    uint8_t		bmIsNoPreferedOrPrefered	: 1;
+    uint8_t		bmIsNullOrNoNull			: 1;
+    uint8_t		bmIsVolatileOrNonVolatile	: 1;
 };
 
 class HID;
@@ -150,10 +148,9 @@ class HID;
  *
  * \note This class is used to implement HID report parsing.
  */
-class HIDReportParser
-{
+class HIDReportParser {
 public:
-	virtual void Parse(HID *hid, bool is_rpt_id, uint32_t len, uint8_t *buf) = 0;
+    virtual void Parse(HID *hid, bool is_rpt_id, uint32_t len, uint8_t *buf) = 0;
 };
 
 #define MAX_REPORT_PARSERS					2
@@ -162,41 +159,46 @@ public:
 /**
  * \class HID definition.
  */
-class HID : public USBDeviceConfig, public UsbConfigXtracter
-{
+class HID : public USBDeviceConfig, public UsbConfigXtracter {
 protected:
-	USBHost		*pUsb;					// USB class instance pointer
-	uint32_t	bAddress;				// address
+    USBHost		*pUsb;					// USB class instance pointer
+    uint32_t	bAddress;				// address
 
 protected:
-	static const uint32_t	epInterruptInIndex	= 1;	// InterruptIN  endpoint index
-	static const uint32_t	epInterruptOutIndex	= 2;	// InterruptOUT endpoint index
+    static const uint32_t	epInterruptInIndex	= 1;	// InterruptIN  endpoint index
+    static const uint32_t	epInterruptOutIndex	= 2;	// InterruptOUT endpoint index
 
-	static const uint32_t	maxHidInterfaces	= 3;
-	static const uint32_t	maxEpPerInterface	= 2;
-	static const uint32_t	totalEndpoints		= (maxHidInterfaces * maxEpPerInterface + 1);
+    static const uint32_t	maxHidInterfaces	= 3;
+    static const uint32_t	maxEpPerInterface	= 2;
+    static const uint32_t	totalEndpoints		= (maxHidInterfaces * maxEpPerInterface + 1);
 
-	void PrintEndpointDescriptor(const USB_ENDPOINT_DESCRIPTOR* ep_ptr);
-	void PrintHidDescriptor(const USB_HID_DESCRIPTOR *pDesc);
+    void PrintEndpointDescriptor(const USB_ENDPOINT_DESCRIPTOR *ep_ptr);
+    void PrintHidDescriptor(const USB_HID_DESCRIPTOR *pDesc);
 
-	virtual HIDReportParser* GetReportParser(uint32_t id) { return 0; };
+    virtual HIDReportParser *GetReportParser(uint32_t id) {
+        return 0;
+    };
 
 public:
-	HID(USBHost *pusb) : pUsb(pusb) {};
+    HID(USBHost *pusb) : pUsb(pusb) {};
 
-	const USBHost* GetUsb() { return pUsb; };
-	virtual bool SetReportParser(uint32_t id, HIDReportParser *prs) { return false; };
+    const USBHost *GetUsb() {
+        return pUsb;
+    };
+    virtual bool SetReportParser(uint32_t id, HIDReportParser *prs) {
+        return false;
+    };
 
-	uint32_t SetProtocol(uint32_t iface, uint32_t protocol);
-    uint32_t GetProtocol(uint32_t iface, uint8_t* dataptr);
-    uint32_t GetIdle(uint32_t iface, uint32_t reportID, uint8_t* dataptr);
+    uint32_t SetProtocol(uint32_t iface, uint32_t protocol);
+    uint32_t GetProtocol(uint32_t iface, uint8_t *dataptr);
+    uint32_t GetIdle(uint32_t iface, uint32_t reportID, uint8_t *dataptr);
     uint32_t SetIdle(uint32_t iface, uint32_t reportID, uint32_t duration);
 
     uint32_t GetReportDescr(uint32_t ep, USBReadParser *parser = NULL);
 
-    uint32_t GetHidDescr(uint32_t ep, uint32_t nbytes, uint8_t* dataptr);
-    uint32_t GetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t* dataptr);
-    uint32_t SetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t* dataptr);
+    uint32_t GetHidDescr(uint32_t ep, uint32_t nbytes, uint8_t *dataptr);
+    uint32_t GetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t *dataptr);
+    uint32_t SetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t *dataptr);
 };
 
 #endif /* HID_H_INCLUDED */

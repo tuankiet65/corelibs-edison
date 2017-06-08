@@ -36,236 +36,237 @@ static uint32_t _readResolution = 10;
 static uint32_t _writeResolution = 8;
 static uint8_t analog_reference = DEFAULT;
 
-static const int pin2pwm(uint8_t pin)
-{
-	uint32_t i;
+static const int pin2pwm(uint8_t pin) {
+    uint32_t i;
 
-	// Scan mappings
-	for (i = 0; i < sizeof_g_APwmDescription; i++){
-		if(g_APwmDescription[i].ulArduinoId == pin)
-			return g_APwmDescription[i].ulPWMId;
-	}
+    // Scan mappings
+    for (i = 0; i < sizeof_g_APwmDescription; i++) {
+        if (g_APwmDescription[i].ulArduinoId == pin) {
+            return g_APwmDescription[i].ulPWMId;
+        }
+    }
 
-	// Indicate error
-	return PIN_EINVAL;
+    // Indicate error
+    return PIN_EINVAL;
 }
 
-int pin2pwmhandle_enable(uint8_t pin)
-{
-	uint32_t i;
+int pin2pwmhandle_enable(uint8_t pin) {
+    uint32_t i;
 
-	// Scan mappings
-	for (i = 0; i < sizeof_g_APwmDescription; i++){
-		if(g_APwmDescription[i].ulArduinoId == pin)
-			return g_APwmDescription[i].iHandleEnable;
-	}
+    // Scan mappings
+    for (i = 0; i < sizeof_g_APwmDescription; i++) {
+        if (g_APwmDescription[i].ulArduinoId == pin) {
+            return g_APwmDescription[i].iHandleEnable;
+        }
+    }
 
-	// Indicate error
-	return PIN_EINVAL;
+    // Indicate error
+    return PIN_EINVAL;
 }
 
-int pin2pwmhandle_duty(uint8_t pin)
-{
-	uint32_t i;
+int pin2pwmhandle_duty(uint8_t pin) {
+    uint32_t i;
 
-	// Scan mappings
-	for (i = 0; i < sizeof_g_APwmDescription; i++){
-		if(g_APwmDescription[i].ulArduinoId == pin)
-			return g_APwmDescription[i].iHandleDuty;
-	}
+    // Scan mappings
+    for (i = 0; i < sizeof_g_APwmDescription; i++) {
+        if (g_APwmDescription[i].ulArduinoId == pin) {
+            return g_APwmDescription[i].iHandleDuty;
+        }
+    }
 
-	// Indicate error
-	return PIN_EINVAL;
+    // Indicate error
+    return PIN_EINVAL;
 }
 
-int pin2pwmhandle_period(uint8_t pin)
-{
-	uint32_t i;
+int pin2pwmhandle_period(uint8_t pin) {
+    uint32_t i;
 
-	// Scan mappings
-	for (i = 0; i < sizeof_g_APwmDescription; i++){
-		if(g_APwmDescription[i].ulArduinoId == pin)
-			return g_APwmDescription[i].iHandlePeriod;
-	}
+    // Scan mappings
+    for (i = 0; i < sizeof_g_APwmDescription; i++) {
+        if (g_APwmDescription[i].ulArduinoId == pin) {
+            return g_APwmDescription[i].iHandlePeriod;
+        }
+    }
 
-	// Indicate error
-	return PIN_EINVAL;
+    // Indicate error
+    return PIN_EINVAL;
 }
 
-void analogReadResolution(uint32_t res)
-{
-	if (res >= 1 && res <= 32)
-		_readResolution = res;
+void analogReadResolution(uint32_t res) {
+    if (res >= 1 && res <= 32) {
+        _readResolution = res;
+    }
 }
 
-void analogWriteResolution(int res)
-{
-	_writeResolution = res;
+void analogWriteResolution(int res) {
+    _writeResolution = res;
 }
 
-static inline uint32_t mapResolution(uint32_t value, uint32_t from, uint32_t to)
-{
-	if (from == to)
-		return value;
-	if (from > to)
-		return value >> (from-to);
-	else
-		return value << (to-from);
+static inline uint32_t mapResolution(uint32_t value, uint32_t from, uint32_t to) {
+    if (from == to) {
+        return value;
+    }
+
+    if (from > to) {
+        return value >> (from - to);
+    } else {
+        return value << (to - from);
+    }
 }
 
-void analogReference(uint8_t mode)
-{
-	/* Retained for backward compatibilty, only DEFAULT is supported */
+void analogReference(uint8_t mode) {
+    /* Retained for backward compatibilty, only DEFAULT is supported */
 }
 
-uint32_t analogRead(uint32_t ulPin)
-{
-	int ret = 0;
-	uint8_t adc;
-	uint32_t ulValue;
-	
-	if (ulPin < NUM_ANALOG_INPUTS)
-		adc = ulPin;
-	else
-		adc = ulPin - A0;
+uint32_t analogRead(uint32_t ulPin) {
+    int ret = 0;
+    uint8_t adc;
+    uint32_t ulValue;
 
-	if (adc > NUM_ANALOG_INPUTS) {
-		trace_error("Invalid analog input channel specified\n");
-		return 0;
-	}
+    if (ulPin < NUM_ANALOG_INPUTS) {
+        adc = ulPin;
+    } else {
+        adc = ulPin - A0;
+    }
 
-	if (unlikely(!g_APinState[A0+adc].uCurrentAdc))
-	{
-		muxSelectAnalogPin(adc);
-		if (ret) {
-			trace_error("%s: can't set mux for pin %d\n",
-				    __func__, A0+adc);
-			return ret;
-		}
-		g_APinState[A0+adc].uCurrentAdc = 1;
-	}
+    if (adc > NUM_ANALOG_INPUTS) {
+        trace_error("Invalid analog input channel specified\n");
+        return 0;
+    }
 
-	ulValue = sysfsAdcGet(g_AdcDescription[adc].iHandle);
+    if (unlikely(!g_APinState[A0 + adc].uCurrentAdc)) {
+        muxSelectAnalogPin(adc);
 
-	/* Kips Bay has a 12-bit ADC. Adjust for desired resolution */
-	if (ulValue)
-		ulValue = mapResolution(ulValue, ADC_RESOLUTION,
-					_readResolution);
+        if (ret) {
+            trace_error("%s: can't set mux for pin %d\n",
+                        __func__, A0 + adc);
+            return ret;
+        }
 
-	return ulValue;
+        g_APinState[A0 + adc].uCurrentAdc = 1;
+    }
+
+    ulValue = sysfsAdcGet(g_AdcDescription[adc].iHandle);
+
+    /* Kips Bay has a 12-bit ADC. Adjust for desired resolution */
+    if (ulValue)
+        ulValue = mapResolution(ulValue, ADC_RESOLUTION,
+                                _readResolution);
+
+    return ulValue;
 }
 
-void analogWrite(uint32_t ulPin, uint32_t ulValue)
-{
-	int ret = 0;
+void analogWrite(uint32_t ulPin, uint32_t ulValue) {
+    int ret = 0;
+    trace_debug("%s ulPin=%u ulValue=%u", __func__, ulPin, ulValue);
 
-	trace_debug("%s ulPin=%u ulValue=%u", __func__, ulPin, ulValue);
+    if (!digitalPinHasPWM(ulPin)) {
+        trace_error("%s pin%u has no pwm", __func__, ulPin);
+        return;
+    }
 
-	if (!digitalPinHasPWM(ulPin)) {
-		trace_error("%s pin%u has no pwm", __func__, ulPin);
-		return;
-	}
+    if (!g_APinState[ulPin].uCurrentPwm) {
+        trace_debug("%s: turning on pwm%u", __func__, ulPin);
+        ret = muxSelectPwmPin(ulPin);
 
-	if (!g_APinState[ulPin].uCurrentPwm) {
-		trace_debug("%s: turning on pwm%u", __func__, ulPin);
-		ret = muxSelectPwmPin(ulPin);
-		if (ret) {
-			trace_error("%s: can't set mux for pin%d",
-				    __func__, ulPin);
-			return;
-		}
-		turnOnPWM(ulPin);
-	}
+        if (ret) {
+            trace_error("%s: can't set mux for pin%d",
+                        __func__, ulPin);
+            return;
+        }
 
-	if (ulValue) {
-		ulValue = mapResolution(ulValue, _writeResolution,
-				PWM_RESOLUTION);
-				
-		if (!g_APinState[ulPin].uPwmEnabled) {
-			if (sysfsPwmEnable(pin2pwmhandle_enable(ulPin)) < 0) {
-				trace_error("%s Failed enabling PWM on pin %u",
-					__func__, ulPin);
-				return;
-			}
-		g_APinState[ulPin].uPwmEnabled = 1;
-		}
+        turnOnPWM(ulPin);
+    }
 
-	if (sysfsPwmSetDutyCycle(pin2pwmhandle_duty(ulPin), ulValue))
-		trace_error("%s Failed setting duty_cycle: %u", __func__,
-				ulValue);
-				
-	}
-	else {
-		PinDescription *p = NULL;
+    if (ulValue) {
+        ulValue = mapResolution(ulValue, _writeResolution,
+                                PWM_RESOLUTION);
 
-		if ((p = pinDescriptionById(ulPin)) == NULL) {
-			//trace_error( "%s: invalid pin %u\n", __func__, pin);
-			return;
-		}
-		pin2alternate(&p);
-		int pwmGpio = p->ulGPIOId;
-		char cmd[40];
-		
-		memset(cmd, '\0', sizeof(cmd));
-		sprintf(cmd, "echo %d %s", pwmGpio, "> /sys/class/gpio/unexport");
-		system(cmd);
-		digitalWrite(ulPin, 0);	//workaround for tangier SoC bug when setting duty cycle to 0%
-		memset(cmd, '\0', sizeof(cmd));
-		sprintf(cmd, "echo %d %s", pwmGpio, "> /sys/class/gpio/export");
-		system(cmd);
-	}
+        if (!g_APinState[ulPin].uPwmEnabled) {
+            if (sysfsPwmEnable(pin2pwmhandle_enable(ulPin)) < 0) {
+                trace_error("%s Failed enabling PWM on pin %u",
+                            __func__, ulPin);
+                return;
+            }
 
-	
+            g_APinState[ulPin].uPwmEnabled = 1;
+        }
+
+        if (sysfsPwmSetDutyCycle(pin2pwmhandle_duty(ulPin), ulValue))
+            trace_error("%s Failed setting duty_cycle: %u", __func__,
+                        ulValue);
+    } else {
+        PinDescription *p = NULL;
+
+        if ((p = pinDescriptionById(ulPin)) == NULL) {
+            //trace_error( "%s: invalid pin %u\n", __func__, pin);
+            return;
+        }
+
+        pin2alternate(&p);
+        int pwmGpio = p->ulGPIOId;
+        char cmd[40];
+        memset(cmd, '\0', sizeof(cmd));
+        sprintf(cmd, "echo %d %s", pwmGpio, "> /sys/class/gpio/unexport");
+        system(cmd);
+        digitalWrite(ulPin, 0);	//workaround for tangier SoC bug when setting duty cycle to 0%
+        memset(cmd, '\0', sizeof(cmd));
+        sprintf(cmd, "echo %d %s", pwmGpio, "> /sys/class/gpio/export");
+        system(cmd);
+    }
 }
 
-void pwmInit(void)
-{
-	int i = 0;
-	int ret = 0;
-	PwmDescription *pwm;
+void pwmInit(void) {
+    int i = 0;
+    int ret = 0;
+    PwmDescription *pwm;
 
-	for (i = 0; i < sizeof_g_APwmDescription; i++) {
-		pwm = &g_APwmDescription[i];
-		if (sysfsPwmExport(pwm->ulPWMId, &pwm->iHandleEnable,
-				&pwm->iHandleDuty, &pwm->iHandlePeriod))
-			continue;
+    for (i = 0; i < sizeof_g_APwmDescription; i++) {
+        pwm = &g_APwmDescription[i];
 
-		/* If for some reason the duty cycle on this channel was bigger
-		 * than SYSFS_PWM_PERIOD_NS setting the period would fail.
-		 * Set the duty_cycle to 0 first avoids this possible issue. */
-		if (sysfsPwmSetDutyCycle(pwm->iHandleDuty, 0))
-			continue;
+        if (sysfsPwmExport(pwm->ulPWMId, &pwm->iHandleEnable,
+                           &pwm->iHandleDuty, &pwm->iHandlePeriod)) {
+            continue;
+        }
 
-		if (sysfsPwmSetPeriod(pwm->iHandlePeriod, SYSFS_PWM_PERIOD_NS))
-			continue;
+        /* If for some reason the duty cycle on this channel was bigger
+         * than SYSFS_PWM_PERIOD_NS setting the period would fail.
+         * Set the duty_cycle to 0 first avoids this possible issue. */
+        if (sysfsPwmSetDutyCycle(pwm->iHandleDuty, 0)) {
+            continue;
+        }
 
-		if (sysfsPwmDisable(pwm->iHandleEnable))
-			continue;
+        if (sysfsPwmSetPeriod(pwm->iHandlePeriod, SYSFS_PWM_PERIOD_NS)) {
+            continue;
+        }
 
-		trace_debug("%s pwm=%u, handleEnable=%p, handlePeriod=%p, handleDuty=%p",
-				__func__, pwm->ulPWMId, pwm->iHandleEnable,
-				pwm->iHandlePeriod, pwm->iHandleDuty);
-	}
+        if (sysfsPwmDisable(pwm->iHandleEnable)) {
+            continue;
+        }
+
+        trace_debug("%s pwm=%u, handleEnable=%p, handlePeriod=%p, handleDuty=%p",
+                    __func__, pwm->ulPWMId, pwm->iHandleEnable,
+                    pwm->iHandlePeriod, pwm->iHandleDuty);
+    }
 }
 
-void adcInit(void)
-{
-	int i = 0;
-	int ret = 0;
+void adcInit(void) {
+    int i = 0;
+    int ret = 0;
 
-	for (i = 0; i < sizeof_g_AdcDescription; i++) {
-		ret = sysfsAdcExport(i, &g_AdcDescription[i].iHandle);
-		if (ret < 0) {
-			trace_error("unable to open adc %d", i);
-		}
+    for (i = 0; i < sizeof_g_AdcDescription; i++) {
+        ret = sysfsAdcExport(i, &g_AdcDescription[i].iHandle);
 
-		trace_debug("adc=%d iHandle=%d",
-			    i, g_AdcDescription[i].iHandle);
-	}
+        if (ret < 0) {
+            trace_error("unable to open adc %d", i);
+        }
 
-	/* No need to set any muxing: done by pinMode.  */
+        trace_debug("adc=%d iHandle=%d",
+                    i, g_AdcDescription[i].iHandle);
+    }
 
-	return 0;
+    /* No need to set any muxing: done by pinMode.  */
+    return 0;
 }
 
 #ifdef __cplusplus

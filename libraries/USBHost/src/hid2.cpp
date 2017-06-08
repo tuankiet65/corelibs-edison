@@ -25,13 +25,11 @@ e-mail   :  support@circuitsathome.com
  *
  * \return 0 on success, error code otherwise.
  */
-uint32_t HID::GetReportDescr(uint32_t ep, USBReadParser *parser)
-{
-	const uint32_t	constBufLen = 64;
-	uint8_t			buf[constBufLen];
-
-	return (pUsb->ctrlReq(bAddress, ep, bmREQ_HIDREPORT, USB_REQUEST_GET_DESCRIPTOR, 0x00,
-			HID_DESCRIPTOR_REPORT, 0x0000, 128, constBufLen, buf, (USBReadParser*)parser));
+uint32_t HID::GetReportDescr(uint32_t ep, USBReadParser *parser) {
+    const uint32_t	constBufLen = 64;
+    uint8_t			buf[constBufLen];
+    return (pUsb->ctrlReq(bAddress, ep, bmREQ_HIDREPORT, USB_REQUEST_GET_DESCRIPTOR, 0x00,
+                          HID_DESCRIPTOR_REPORT, 0x0000, 128, constBufLen, buf, (USBReadParser *)parser));
 }
 
 /**
@@ -46,8 +44,7 @@ uint32_t HID::GetReportDescr(uint32_t ep, USBReadParser *parser)
  *
  * \return 0 on success, error code otherwise.
  */
-uint32_t HID::SetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t* dataptr)
-{
+uint32_t HID::SetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t *dataptr) {
     return (pUsb->ctrlReq(bAddress, ep, bmREQ_HIDOUT, HID_REQUEST_SET_REPORT, report_id, report_type, iface, nbytes, nbytes, dataptr, NULL));
 }
 
@@ -63,9 +60,8 @@ uint32_t HID::SetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint3
  *
  * \return 0 on success, error code otherwise.
  */
-uint32_t HID::GetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t* dataptr)
-{
-	return (pUsb->ctrlReq(bAddress, ep, bmREQ_HIDIN, HID_REQUEST_GET_REPORT, report_id, report_type, iface, nbytes, nbytes, dataptr, NULL));
+uint32_t HID::GetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint32_t report_id, uint32_t nbytes, uint8_t *dataptr) {
+    return (pUsb->ctrlReq(bAddress, ep, bmREQ_HIDIN, HID_REQUEST_GET_REPORT, report_id, report_type, iface, nbytes, nbytes, dataptr, NULL));
 }
 
 /**
@@ -77,8 +73,7 @@ uint32_t HID::GetReport(uint32_t ep, uint32_t iface, uint32_t report_type, uint3
  *
  * \return 0 on success, error code otherwise.
  */
-uint32_t HID::GetIdle(uint32_t iface, uint32_t report_id, uint8_t* dataptr)
-{
+uint32_t HID::GetIdle(uint32_t iface, uint32_t report_id, uint8_t *dataptr) {
     return (pUsb->ctrlReq(bAddress, 0, bmREQ_HIDIN, HID_REQUEST_GET_IDLE, report_id, 0, iface, 0x0001, 0x0001, dataptr, NULL));
 }
 
@@ -91,8 +86,7 @@ uint32_t HID::GetIdle(uint32_t iface, uint32_t report_id, uint8_t* dataptr)
  *
  * \return 0 on success, error code otherwise.
  */
-uint32_t HID::SetIdle(uint32_t iface, uint32_t report_id, uint32_t duration)
-{
+uint32_t HID::SetIdle(uint32_t iface, uint32_t report_id, uint32_t duration) {
     return (pUsb->ctrlReq(bAddress, 0, bmREQ_HIDOUT, HID_REQUEST_SET_IDLE, report_id, duration, iface, 0x0000, 0x0000, NULL, NULL));
 }
 
@@ -104,9 +98,8 @@ uint32_t HID::SetIdle(uint32_t iface, uint32_t report_id, uint32_t duration)
  *
  * \return 0 on success, error code otherwise.
  */
-uint32_t HID::SetProtocol(uint32_t iface, uint32_t protocol)
-{
-	return (pUsb->ctrlReq(bAddress, 0, bmREQ_HIDOUT, HID_REQUEST_SET_PROTOCOL, protocol, 0x00, iface, 0x0000, 0x0000, NULL, NULL));
+uint32_t HID::SetProtocol(uint32_t iface, uint32_t protocol) {
+    return (pUsb->ctrlReq(bAddress, 0, bmREQ_HIDOUT, HID_REQUEST_SET_PROTOCOL, protocol, 0x00, iface, 0x0000, 0x0000, NULL, NULL));
 }
 
 /**
@@ -117,9 +110,8 @@ uint32_t HID::SetProtocol(uint32_t iface, uint32_t protocol)
  *
  * \return 0 on success, error code otherwise.
  */
-uint32_t HID::GetProtocol(uint32_t iface, uint8_t* dataptr)
-{
-	return (pUsb->ctrlReq(bAddress, 0, bmREQ_HIDIN, HID_REQUEST_GET_PROTOCOL, 0x00, 0x00, iface, 0x0001, 0x0001, dataptr, NULL));
+uint32_t HID::GetProtocol(uint32_t iface, uint8_t *dataptr) {
+    return (pUsb->ctrlReq(bAddress, 0, bmREQ_HIDIN, HID_REQUEST_GET_PROTOCOL, 0x00, 0x00, iface, 0x0001, 0x0001, dataptr, NULL));
 }
 
 /**
@@ -129,13 +121,12 @@ uint32_t HID::GetProtocol(uint32_t iface, uint8_t* dataptr)
  *
  * \param pDesc Pointer to HID descriptor.
  */
-void HID::PrintHidDescriptor(const USB_HID_DESCRIPTOR *pDesc)
-{
-	TRACE_USBHOST(printf("HID::PrintHidDescriptor : bDescLength: %d\r\n", pDesc->bLength);)
-	TRACE_USBHOST(printf("HID::PrintHidDescriptor : bDescriptorType: %d\r\n", pDesc->bDescriptorType);)
-	TRACE_USBHOST(printf("HID::PrintHidDescriptor : bcdHID: %d\r\n", pDesc->bcdHID);)
-	TRACE_USBHOST(printf("HID::PrintHidDescriptor : bCountryCode: %d\r\n", pDesc->bCountryCode);)
-	TRACE_USBHOST(printf("HID::PrintHidDescriptor : bNumDescriptors: %d\r\n", pDesc->bNumDescriptors);)
-	TRACE_USBHOST(printf("HID::PrintHidDescriptor : bDescrType: %d\r\n", pDesc->bDescrType);)
-	TRACE_USBHOST(printf("HID::PrintHidDescriptor : wDescriptorLength: %d\r\n", pDesc->wDescriptorLength);)
+void HID::PrintHidDescriptor(const USB_HID_DESCRIPTOR *pDesc) {
+    TRACE_USBHOST(printf("HID::PrintHidDescriptor : bDescLength: %d\r\n", pDesc->bLength);)
+    TRACE_USBHOST(printf("HID::PrintHidDescriptor : bDescriptorType: %d\r\n", pDesc->bDescriptorType);)
+    TRACE_USBHOST(printf("HID::PrintHidDescriptor : bcdHID: %d\r\n", pDesc->bcdHID);)
+    TRACE_USBHOST(printf("HID::PrintHidDescriptor : bCountryCode: %d\r\n", pDesc->bCountryCode);)
+    TRACE_USBHOST(printf("HID::PrintHidDescriptor : bNumDescriptors: %d\r\n", pDesc->bNumDescriptors);)
+    TRACE_USBHOST(printf("HID::PrintHidDescriptor : bDescrType: %d\r\n", pDesc->bDescrType);)
+    TRACE_USBHOST(printf("HID::PrintHidDescriptor : wDescriptorLength: %d\r\n", pDesc->wDescriptorLength);)
 }

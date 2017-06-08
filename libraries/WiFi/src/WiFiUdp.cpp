@@ -47,228 +47,221 @@
 WiFiUDP::WiFiUDP() : _sock(-1) {}
 
 /* Start WiFiUDP socket, listening at local port PORT */
-uint8_t WiFiUDP::begin(uint16_t port)
-{
+uint8_t WiFiUDP::begin(uint16_t port) {
+    _port = port;
+    _remaining = 0;
+    int ret = socket(AF_INET, SOCK_DGRAM, 0);
 
-	_port = port;
-	_remaining = 0;
-	int ret = socket(AF_INET, SOCK_DGRAM, 0);
-	if ( ret < 0){
-		trace_error("%s fail init UDP socket!", __func__);
-		return 0;
-	}
+    if ( ret < 0) {
+        trace_error("%s fail init UDP socket!", __func__);
+        return 0;
+    }
 
-	_sock = ret;
-	if (listen() != 0){
-		trace_error("unable to listen");
-		close(_sock);
-		return 0;
-	}
+    _sock = ret;
 
-	int on=1;
-	ret = ioctl(_sock, FIONBIO, (char *)&on);
-	if (ret < 0) {
-		trace_error("ioctl() failed");
-		close(_sock);
-		return 0;
-	}
+    if (listen() != 0) {
+        trace_error("unable to listen");
+        close(_sock);
+        return 0;
+    }
 
+    int on = 1;
+    ret = ioctl(_sock, FIONBIO, (char *)&on);
 
-	return 1;
+    if (ret < 0) {
+        trace_error("ioctl() failed");
+        close(_sock);
+        return 0;
+    }
+
+    return 1;
 }
 
-int WiFiUDP::listen()
-{
-	bzero(&_sin,sizeof(_sin));
-	_sin.sin_family = AF_INET;
-	_sin.sin_addr.s_addr=htonl(INADDR_ANY);
-	_sin.sin_port=htons(_port);
-
-	return bind(_sock,(struct sockaddr *)&_sin,sizeof(_sin));
+int WiFiUDP::listen() {
+    bzero(&_sin, sizeof(_sin));
+    _sin.sin_family = AF_INET;
+    _sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    _sin.sin_port = htons(_port);
+    return bind(_sock, (struct sockaddr *)&_sin, sizeof(_sin));
 }
 
 /* return number of bytes available in the current packet,
    will return zero if parsePacket hasn't been called yet */
 int WiFiUDP::available() {
-  	struct pollfd ufds;
-	int ret = 0;
-	extern int errno;
-	int    timeout = 0;	// milliseconds
+    struct pollfd ufds;
+    int ret = 0;
+    extern int errno;
+    int    timeout = 0;	// milliseconds
 
-	if (_sock == -1)
-		return 0;
+    if (_sock == -1) {
+        return 0;
+    }
 
-	ufds.fd = _sock;
-	ufds.events = POLLIN;
-	ufds.revents = 0;
+    ufds.fd = _sock;
+    ufds.events = POLLIN;
+    ufds.revents = 0;
+    ret = poll(&ufds, 1, timeout);
 
-	ret = poll(&ufds, 1, timeout);
-	if ( ret < 0 ){
-		trace_error("%s error on poll errno %d", __func__, errno);
-		return 0;
-	}
-	if( ret == 0)
-		return 0;
+    if ( ret < 0 ) {
+        trace_error("%s error on poll errno %d", __func__, errno);
+        return 0;
+    }
 
-	// only return available if bytes are present to be read
-	if(ret > 0 && ufds.revents&POLLIN){
-		int bytes = 0;
-		ret = ioctl(_sock, FIONREAD, &bytes);
-		if ( ret < 0){
-				trace_error("ioctl fail on socket!");
-				return 0;
-		}
-		if ( ret == 0 && bytes != 0){
-			return bytes;
-		}
-	}
-	return 0;
+    if ( ret == 0) {
+        return 0;
+    }
+
+    // only return available if bytes are present to be read
+    if (ret > 0 && ufds.revents & POLLIN) {
+        int bytes = 0;
+        ret = ioctl(_sock, FIONREAD, &bytes);
+
+        if ( ret < 0) {
+            trace_error("ioctl fail on socket!");
+            return 0;
+        }
+
+        if ( ret == 0 && bytes != 0) {
+            return bytes;
+        }
+    }
+
+    return 0;
 }
 
 /* Release any resources being used by this WiFiUDP instance */
-void WiFiUDP::stop()
-{
-	if (_sock == -1)
-		return;
+void WiFiUDP::stop() {
+    if (_sock == -1) {
+        return;
+    }
 
-	close(_sock);
-	_sock = -1;
-
-	//WiFiClass::_server_port[_sock] = 0;
-	WiFiClass::_server_port[0] = 0;
- 	//_sock = MAX_SOCK_NUM;
- 	//_sock = -1;
+    close(_sock);
+    _sock = -1;
+    //WiFiClass::_server_port[_sock] = 0;
+    WiFiClass::_server_port[0] = 0;
+    //_sock = MAX_SOCK_NUM;
+    //_sock = -1;
 }
 
-int WiFiUDP::beginPacket(const char *host, uint16_t port)
-{
-	// Look up the host first
+int WiFiUDP::beginPacket(const char *host, uint16_t port) {
+    // Look up the host first
+    int ret = 0;
+    extern int errno;
+    struct hostent *hp;
 
-	int ret = 0;
-	extern int errno;
-	struct hostent *hp;
+    if (host == NULL || _sock == -1) {
+        return -EINVAL;
+    }
 
-	if (host == NULL || _sock == -1)
-		return -EINVAL;
+    hp = gethostbyname(host);
+    _offset = 0;
 
-	hp = gethostbyname(host);
-	_offset = 0;
-	if (hp == NULL){
-			trace_error("gethostbyname %s fail!", host);
-			return -ENODEV;
-	}
-	memcpy(&_sin.sin_addr, hp->h_addr, sizeof(_sin.sin_addr));
-	_sin.sin_port = htons(port); //PL : probably useful to have this...
-	return 0;
+    if (hp == NULL) {
+        trace_error("gethostbyname %s fail!", host);
+        return -ENODEV;
+    }
 
+    memcpy(&_sin.sin_addr, hp->h_addr, sizeof(_sin.sin_addr));
+    _sin.sin_port = htons(port); //PL : probably useful to have this...
+    return 0;
 }
 
-int WiFiUDP::beginPacket(IPAddress ip, uint16_t port)
-{
-	_offset = 0 ;
-
-	_sin.sin_addr.s_addr = ip._sin.sin_addr.s_addr;
-	_sin.sin_family = AF_INET;
-  	_sin.sin_port = htons(port);
-
-  	return 0;
+int WiFiUDP::beginPacket(IPAddress ip, uint16_t port) {
+    _offset = 0 ;
+    _sin.sin_addr.s_addr = ip._sin.sin_addr.s_addr;
+    _sin.sin_family = AF_INET;
+    _sin.sin_port = htons(port);
+    return 0;
 }
 
-int WiFiUDP::endPacket()
-{
-	if ( _sock == -1 )
-		return -1;
-	trace_debug("%s called", __func__);
-	return sendUDP();
+int WiFiUDP::endPacket() {
+    if ( _sock == -1 ) {
+        return -1;
+    }
+
+    trace_debug("%s called", __func__);
+    return sendUDP();
 }
 
-int WiFiUDP::sendUDP()
-{
-	int ret;
+int WiFiUDP::sendUDP() {
+    int ret;
 
-	if ((ret = sendto(_sock, _buffer, _offset, 0, (struct sockaddr*)&_sin, sizeof(_sin))) < 0)
-		trace_error("%s Couldn't send UPD message: %s", __func__, strerror(errno));
+    if ((ret = sendto(_sock, _buffer, _offset, 0, (struct sockaddr *)&_sin, sizeof(_sin))) < 0) {
+        trace_error("%s Couldn't send UPD message: %s", __func__, strerror(errno));
+    }
 
-	return ret;
+    return ret;
 }
 
-size_t WiFiUDP::write(uint8_t byte)
-{
-	return write(&byte, 1);
+size_t WiFiUDP::write(uint8_t byte) {
+    return write(&byte, 1);
 }
 
-int WiFiUDP::bufferData(const uint8_t *buffer, size_t size)
-{
-	int written_bytes =  0;
-	if  (UDP_TX_PACKET_MAX_SIZE - _offset < size) {
-		written_bytes =  UDP_TX_PACKET_MAX_SIZE - _offset;
-	} else {
-		written_bytes = size;
-	}
-	memcpy(_buffer + _offset, buffer, written_bytes);
-	_offset += written_bytes;
+int WiFiUDP::bufferData(const uint8_t *buffer, size_t size) {
+    int written_bytes =  0;
 
-	return written_bytes;
+    if  (UDP_TX_PACKET_MAX_SIZE - _offset < size) {
+        written_bytes =  UDP_TX_PACKET_MAX_SIZE - _offset;
+    } else {
+        written_bytes = size;
+    }
+
+    memcpy(_buffer + _offset, buffer, written_bytes);
+    _offset += written_bytes;
+    return written_bytes;
 }
 
-size_t WiFiUDP::write(const uint8_t *buffer, size_t size)
-{
-	uint16_t bytes_written = bufferData(buffer, size);
-	return bytes_written;
+size_t WiFiUDP::write(const uint8_t *buffer, size_t size) {
+    uint16_t bytes_written = bufferData(buffer, size);
+    return bytes_written;
 }
 
-int WiFiUDP::parsePacket()
-{
-	_remaining = available();
-	return _remaining;
+int WiFiUDP::parsePacket() {
+    _remaining = available();
+    return _remaining;
 }
 
-int WiFiUDP::read()
-{
-	uint8_t b[_remaining];
-	int got;
+int WiFiUDP::read() {
+    uint8_t b[_remaining];
+    int got;
+    got = recv(_sock, &b, _remaining, 0);
 
-	got = recv(_sock, &b, _remaining, 0);
-	if (got > 0)
-		_remaining -= got;
+    if (got > 0) {
+        _remaining -= got;
+    }
 
-	return got;
+    return got;
 }
 
-int WiFiUDP::read(unsigned char* buffer, size_t len)
-{
-	struct sockaddr_in addr;
-	socklen_t addrlen = sizeof(struct sockaddr);
-	size_t buf_size;
-	int got;
+int WiFiUDP::read(unsigned char *buffer, size_t len) {
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(struct sockaddr);
+    size_t buf_size;
+    int got;
 
-	if (_remaining > 0) {
-		buf_size = _remaining < len ? _remaining : len;
+    if (_remaining > 0) {
+        buf_size = _remaining < len ? _remaining : len;
+        got = recvfrom(_sock, buffer, buf_size, 0, (struct sockaddr *)&addr, &addrlen);
 
-		got = recvfrom(_sock, buffer, buf_size, 0, (struct sockaddr *)&addr, &addrlen);
+        if (got > 0) {
+            _remoteIP = &addr;
+            _remotePort = htons(addr.sin_port);
+            _remaining -= got;
+            return got;
+        }
+    }
 
-		if (got > 0) {
-			_remoteIP = &addr;
-			_remotePort = htons(addr.sin_port);
-			_remaining -= got;
-			return got;
-		}
-	}
-
-	// If we get here, there's no data available or recv failed
-	return -1;
-
+    // If we get here, there's no data available or recv failed
+    return -1;
 }
 
-int WiFiUDP::peek()
-{
-	return -1;
+int WiFiUDP::peek() {
+    return -1;
 }
 
-void WiFiUDP::flush()
-{
-	while (_remaining && read() > 0) {
-		/* do nothing */
-	}
+void WiFiUDP::flush() {
+    while (_remaining && read() > 0) {
+        /* do nothing */
+    }
 }
 

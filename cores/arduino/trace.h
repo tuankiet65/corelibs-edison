@@ -44,16 +44,16 @@ extern "C" {
 
 
 typedef enum {
-	TRACE_TARGET_UART = 1,
-	TRACE_TARGET_ETH,
-	TRACE_TARGET_SYSLOG,
-}trace_target_t;
+    TRACE_TARGET_UART = 1,
+    TRACE_TARGET_ETH,
+    TRACE_TARGET_SYSLOG,
+} trace_target_t;
 
 typedef enum {
-	TRACE_LEVEL_ERROR = 0,
-	TRACE_LEVEL_INFO,
-	TRACE_LEVEL_DEBUG,
-}trace_level_t;
+    TRACE_LEVEL_ERROR = 0,
+    TRACE_LEVEL_INFO,
+    TRACE_LEVEL_DEBUG,
+} trace_level_t;
 
 /**
  * trace_init
@@ -81,7 +81,7 @@ void trace_target_enable(trace_target_t target);
  *
  * Print out a trace string
  */
-void trace(trace_level_t tlevel, const char * prefix, const char * fmt, ...);
+void trace(trace_level_t tlevel, const char *prefix, const char *fmt, ...);
 
 /**
  * trace_enable

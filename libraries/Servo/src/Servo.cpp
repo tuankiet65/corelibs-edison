@@ -1,5 +1,5 @@
 /*
-Servo.cpp library class implementation to support servo motors 
+Servo.cpp library class implementation to support servo motors
 Copyright (C) 2014 Intel Corporation
 
 This library is free software; you can redistribute it and/or
@@ -21,184 +21,169 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sysfs.h>
 uint8_t Servo::counter = 0; // init the counter here.. static...
 
-Servo::Servo()
-{
-	if (counter < MAX_NUMBER_OF_SERVOS) {
-		this->index = counter++; // assign a servo index to this instance
-		lastByteInDuty = -1;
-	}
-	else {
-		this->index = INVALID_SERVO;  // too many servos
-	}
-
+Servo::Servo() {
+    if (counter < MAX_NUMBER_OF_SERVOS) {
+        this->index = counter++; // assign a servo index to this instance
+        lastByteInDuty = -1;
+    } else {
+        this->index = INVALID_SERVO;  // too many servos
+    }
 }
 
 #ifdef SERVO_PWM_WITH_SYSFS
-void Servo::enablePin(bool enable)
-{
-	//set the mux and open the handles
-	analogWrite(pin, 0);
+void Servo::enablePin(bool enable) {
+    //set the mux and open the handles
+    analogWrite(pin, 0);
 
-	if (enable)
-		sysfsPwmEnable(pin2pwmhandle_enable(pin));
-	else
-		sysfsPwmDisable(pin2pwmhandle_enable(pin));
+    if (enable) {
+        sysfsPwmEnable(pin2pwmhandle_enable(pin));
+    } else {
+        sysfsPwmDisable(pin2pwmhandle_enable(pin));
+    }
 }
 
-void Servo::disablePin()
-{
-	this->enablePin(false);
+void Servo::disablePin() {
+    this->enablePin(false);
 }
 
-void Servo::setPeriod(unsigned long int period)
-{
-	if (sysfsPwmSetPeriod(pin2pwmhandle_period(pin), period) < 0)
-		trace_error("%s Can't set period", __func__);
+void Servo::setPeriod(unsigned long int period) {
+    if (sysfsPwmSetPeriod(pin2pwmhandle_period(pin), period) < 0) {
+        trace_error("%s Can't set period", __func__);
+    }
 }
 
-void Servo::setDutyCycle(unsigned int duty_cycle)
-{
-	if (sysfsPwmSetRawDutyCycle(pin2pwmhandle_duty(pin), duty_cycle) < 0)
-		trace_error("%s Can't set duty cycle", __func__);
+void Servo::setDutyCycle(unsigned int duty_cycle) {
+    if (sysfsPwmSetRawDutyCycle(pin2pwmhandle_duty(pin), duty_cycle) < 0) {
+        trace_error("%s Can't set duty cycle", __func__);
+    }
 }
 
-void Servo::prepare_pin(uint8_t pin)
-{
-	this->enablePin();
+void Servo::prepare_pin(uint8_t pin) {
+    this->enablePin();
 }
 
-void Servo::detach()
-{
-	if (this->isAttached) {
-		this->isAttached = false;
-		counter--;
-		this->lastByteInDuty = -1;
-	}
-	this->disablePin();
+void Servo::detach() {
+    if (this->isAttached) {
+        this->isAttached = false;
+        counter--;
+        this->lastByteInDuty = -1;
+    }
 
-	if (counter <= 0) {
-		// restore the original frequency
-		// for PWM channels
-		this->setPeriod(SYSFS_PWM_PERIOD_NS);
-	}
+    this->disablePin();
+
+    if (counter <= 0) {
+        // restore the original frequency
+        // for PWM channels
+        this->setPeriod(SYSFS_PWM_PERIOD_NS);
+    }
 }
 
 #endif
 
-uint8_t Servo::attach(int16_t pin)
-{
-	return attach(pin, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
+uint8_t Servo::attach(int16_t pin) {
+    return attach(pin, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
 }
 
-uint8_t Servo::attach(int pin, int min, int max)
-{
-	// need to validate the pin
-	uint8_t list_index = 0;
-	bool is_valid_pin = false;
+uint8_t Servo::attach(int pin, int min, int max) {
+    // need to validate the pin
+    uint8_t list_index = 0;
+    bool is_valid_pin = false;
 
-	// let's check the boundaries
-	if (min < MIN_PULSE_WIDTH)
-		min = MIN_PULSE_WIDTH;
-	if (max > MAX_PULSE_WIDTH)
-		max = MAX_PULSE_WIDTH;
+    // let's check the boundaries
+    if (min < MIN_PULSE_WIDTH) {
+        min = MIN_PULSE_WIDTH;
+    }
 
-	trace_debug("%s pin:%d min:%d max:%d\n", __func__, pin, min, max);
+    if (max > MAX_PULSE_WIDTH) {
+        max = MAX_PULSE_WIDTH;
+    }
 
-	for (list_index = 0; list_index < MAX_NUMBER_OF_SERVOS; list_index++) {
-		if (pinData[list_index].pin == pin) {
-			is_valid_pin = true;
-			break;
-		}
-	}
+    trace_debug("%s pin:%d min:%d max:%d\n", __func__, pin, min, max);
 
-	if (!is_valid_pin) {
-		trace_error("invalid pin");
-		return INVALID_SERVO;
-	}
+    for (list_index = 0; list_index < MAX_NUMBER_OF_SERVOS; list_index++) {
+        if (pinData[list_index].pin == pin) {
+            is_valid_pin = true;
+            break;
+        }
+    }
 
-	if (this->index < MAX_NUMBER_OF_SERVOS) {
+    if (!is_valid_pin) {
+        trace_error("invalid pin");
+        return INVALID_SERVO;
+    }
 
-		// set as active
-		pinData[list_index].isActive = true;
-
-		this->pin = pin;
-		this->min = min;
-		this->max = max;
-		this->isAttached = true;
-
+    if (this->index < MAX_NUMBER_OF_SERVOS) {
+        // set as active
+        pinData[list_index].isActive = true;
+        this->pin = pin;
+        this->min = min;
+        this->max = max;
+        this->isAttached = true;
 #ifdef SERVO_PWM_WITH_I2C
-		this->is188hz = true;
-		pinMode(pin, OUTPUT);
-		analogWrite(pin, 1);
-		writeMicroseconds(DEFAULT_PULSE_WIDTH);
+        this->is188hz = true;
+        pinMode(pin, OUTPUT);
+        analogWrite(pin, 1);
+        writeMicroseconds(DEFAULT_PULSE_WIDTH);
 #else
-		// sysfs
-		this->is188hz = false;
-		this->setPeriod(PWM_50Hz);
-		this->setDutyCycle(DEFAULT_PULSE_WIDTH * 1000);
-		this->enablePin();
-#endif  
-	}
+        // sysfs
+        this->is188hz = false;
+        this->setPeriod(PWM_50Hz);
+        this->setDutyCycle(DEFAULT_PULSE_WIDTH * 1000);
+        this->enablePin();
+#endif
+    }
 
-	trace_debug("%s Attached ok on pin:%d min:%d max:%d\n", __func__,
-			pin, this->min, this->max);
-
-	return this->index;
+    trace_debug("%s Attached ok on pin:%d min:%d max:%d\n", __func__,
+                pin, this->min, this->max);
+    return this->index;
 }
 
 
 #ifdef SERVO_PWM_WITH_I2C
-byte Servo::transform_cypress_duty_cycle_byte(int microsecs)
-{
+byte Servo::transform_cypress_duty_cycle_byte(int microsecs) {
+    /* the max division of 23ms (100% duty cycle) is
+     255 units (bytes 0 to 255 according regs 0x2B
 
-	/* the max division of 23ms (100% duty cycle) is
-	 255 units (bytes 0 to 255 according regs 0x2B
+     So, the maximum units for 2ms is 22.17
 
-	 So, the maximum units for 2ms is 22.17
+     The principle it is used for 188Hz thar correspond
+     a period of 5.319ms.
 
-	 The principle it is used for 188Hz thar correspond
-	 a period of 5.319ms.
+     So, the max byte available for different frequency
+     is in maximum time of 2ms or 2.4ms in 8 bits resolution
+     is:
 
-	 So, the max byte available for different frequency
-	 is in maximum time of 2ms or 2.4ms in 8 bits resolution
-	 is:
+     = max_duty/1000 * (1/freq)/255
+     = max_duty*255/(1000/freq)
 
-	 = max_duty/1000 * (1/freq)/255
-	 = max_duty*255/(1000/freq)
+     */
+    int freq = (this->is188hz) ? 188 : 43.4;
+    int max_byte = MAX_PULSE_WIDTH * 255 * freq / 1000000L;
 
-	 */
+    if (this->min == 1000) {
+        trace_debug("maxbyte:%d\n", max_byte);
+    }
 
-	int freq = (this->is188hz) ? 188:43.4;
-	int max_byte = MAX_PULSE_WIDTH*255*freq/1000000L;
-
-	if(this->min==1000) trace_debug("maxbyte:%d\n", max_byte);
-
-	byte b_duty = map(microsecs, 0, MAX_PULSE_WIDTH, 0, max_byte);
-
-	return b_duty;
+    byte b_duty = map(microsecs, 0, MAX_PULSE_WIDTH, 0, max_byte);
+    return b_duty;
 }
 
-void Servo::set48hz()
-{
-	if (this->is188hz)
-	{
-		// only changes if is different freq
-		this->is188hz = false;
-
-		// cypress - I2C
-		writeMicroseconds(DEFAULT_PULSE_WIDTH);
-	}
+void Servo::set48hz() {
+    if (this->is188hz) {
+        // only changes if is different freq
+        this->is188hz = false;
+        // cypress - I2C
+        writeMicroseconds(DEFAULT_PULSE_WIDTH);
+    }
 }
 
-void Servo::set188hz()
-{
-	if (!this->is188hz)
-	{
-		// only changes if is different freq
-		this->is188hz = true;
-		// cypress - I2C
-		writeMicroseconds(DEFAULT_PULSE_WIDTH);
-	}
+void Servo::set188hz() {
+    if (!this->is188hz) {
+        // only changes if is different freq
+        this->is188hz = true;
+        // cypress - I2C
+        writeMicroseconds(DEFAULT_PULSE_WIDTH);
+    }
 }
 
 /* The "train" requested by servo motors is
@@ -207,127 +192,113 @@ void Servo::set188hz()
  However the cypress does not offer a good angle
  resolution on this frequency and the user
  has option to operates the servos in 188Hz */
-void Servo::prepare_pin(uint8_t pin)
-{
+void Servo::prepare_pin(uint8_t pin) {
+    extern TwoWire Wire;
+    Wire.begin();
+    // let's use this function only to select the bit port
+    // the datasheet is a little confusing regading this set
+    analogWrite(pin, 1);
+    // Select programmable PWM CLK source to 367.7 Hz
+    Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
+    Wire.write(0x29);
+    Wire.write(0x04);
+    Wire.endTransmission();
+    // Rising edge register
+    Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
+    Wire.write(0x2a);
+    Wire.write(0xff);
+    Wire.endTransmission();
+    // Set divider to get 47.4Hz freq.
+    Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
+    Wire.write(0x2C);
 
-	extern TwoWire Wire;
+    if (this->is188hz) {
+        Wire.write(0x02);
+    } else {
+        Wire.write(0x09);
+    }
 
-	Wire.begin();
-
-	// let's use this function only to select the bit port
-	// the datasheet is a little confusing regading this set
-
-	analogWrite(pin, 1);
-
-	// Select programmable PWM CLK source to 367.7 Hz
-	Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
-	Wire.write(0x29);
-	Wire.write(0x04);
-	Wire.endTransmission();
-
-	// Rising edge register
-	Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
-	Wire.write(0x2a);
-	Wire.write(0xff);
-	Wire.endTransmission();
-
-	// Set divider to get 47.4Hz freq.
-	Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
-	Wire.write(0x2C);
-
-	if (this->is188hz)
-	Wire.write(0x02);
-	else
-	Wire.write(0x09);
-
-	Wire.endTransmission();
+    Wire.endTransmission();
 }
 
-void Servo::detach()
-{
-	if (this->isAttached) {
-		this->isAttached = false;
-		counter--;
-		pinMode(this->pin, OUTPUT);
-		this->lastByteInDuty = -1;
-	}
+void Servo::detach() {
+    if (this->isAttached) {
+        this->isAttached = false;
+        counter--;
+        pinMode(this->pin, OUTPUT);
+        this->lastByteInDuty = -1;
+    }
 }
 #endif
 
-void Servo::writeMicroseconds(int microsecs)
-{
-
-#ifdef SERVO_PWM_WITH_I2C 
-	int byteDuty = transform_cypress_duty_cycle_byte(microsecs);
+void Servo::writeMicroseconds(int microsecs) {
+#ifdef SERVO_PWM_WITH_I2C
+    int byteDuty = transform_cypress_duty_cycle_byte(microsecs);
 #else
-	int byteDuty = microsecs;
+    int byteDuty = microsecs;
 #endif
-	if (this->lastByteInDuty == byteDuty)
-		return;
 
-	this->lastByteInDuty = byteDuty;
+    if (this->lastByteInDuty == byteDuty) {
+        return;
+    }
 
-	// checking the boundaries
-	if (microsecs < this->min)
-		microsecs = this->min;
-	if (microsecs > this->max)
-		microsecs = this->max;
+    this->lastByteInDuty = byteDuty;
 
-#ifdef SERVO_PWM_WITH_I2C 
+    // checking the boundaries
+    if (microsecs < this->min) {
+        microsecs = this->min;
+    }
 
-	prepare_pin(this->pin);
+    if (microsecs > this->max) {
+        microsecs = this->max;
+    }
 
-	// Set duty cycle
-	Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
-	Wire.write(0x2b);
-	Wire.write(byteDuty);
-	Wire.endTransmission();
+#ifdef SERVO_PWM_WITH_I2C
+    prepare_pin(this->pin);
+    // Set duty cycle
+    Wire.beginTransmission(CYPRESS_I2C_ADDRESS);
+    Wire.write(0x2b);
+    Wire.write(byteDuty);
+    Wire.endTransmission();
 #else
-	// set in sysfs
-	this->setDutyCycle(microsecs * 1000);
+    // set in sysfs
+    this->setDutyCycle(microsecs * 1000);
 #endif
-	// update last microseconds passed
-	this->usecs = microsecs;
-
+    // update last microseconds passed
+    this->usecs = microsecs;
 }
 
-void Servo::write(int val)
-{
-	// according to Arduino reference lib, if this angle will
-	// be bigger than 200, it should be considered as microsenconds
+void Servo::write(int val) {
+    // according to Arduino reference lib, if this angle will
+    // be bigger than 200, it should be considered as microsenconds
+    if (val < MIN_PULSE_WIDTH) {
+        // yeah.. user is passing angles
+        if (val < 0) {
+            val = 0;
+        } else if (val > 180) {
+            val = 180;
+        }
 
-	if (val < MIN_PULSE_WIDTH) {
-		// yeah.. user is passing angles
-
-		if (val < 0)
-			val = 0;
-		else if (val > 180)
-			val = 180;
-
-		trace_debug("it is an angle:%d  this->min:%d  this->max:%d\n",
-				val, this->min, this->max);
-		writeMicroseconds(map(val, MIN_ANGLE, MAX_ANGLE, this->min,
-					this->max));
-	}
-	else {
-		trace_debug("it is microseconds:%d\n", val);
-		// actually angle on this case it is microsencods
-		writeMicroseconds(val);
-	}
+        trace_debug("it is an angle:%d  this->min:%d  this->max:%d\n",
+                    val, this->min, this->max);
+        writeMicroseconds(map(val, MIN_ANGLE, MAX_ANGLE, this->min,
+                              this->max));
+    } else {
+        trace_debug("it is microseconds:%d\n", val);
+        // actually angle on this case it is microsencods
+        writeMicroseconds(val);
+    }
 }
 
-int Servo::read()
-{
-	return map(this->usecs, this->min, this->max, MIN_ANGLE, MAX_ANGLE);
+int Servo::read() {
+    return map(this->usecs, this->min, this->max, MIN_ANGLE, MAX_ANGLE);
 }
 
-int Servo::readMicroseconds()
-{
-	return this->usecs;
+int Servo::readMicroseconds() {
+    return this->usecs;
 }
 
-bool Servo::attached()
-{
-	return this->isAttached;
+bool Servo::attached() {
+    return this->isAttached;
 }
 

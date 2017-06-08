@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 int sysfsPwmExport(unsigned pwm, int *handle_enable, int *handle_duty,
-		int *handle_period);
+                   int *handle_period);
 int sysfsPwmEnable(int handle_enable);
 int sysfsPwmDisable(int handle_enable);
 int sysfsPwmSetDutyCycle(int handle_duty, unsigned int duty_cycle);

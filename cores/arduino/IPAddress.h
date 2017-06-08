@@ -49,7 +49,9 @@ private:
     // be used when you know that the usage of the returned uint8_t* will be transient and not
     // stored.
     //uint8_t* raw_address() { return _address; };
-    uint8_t* raw_address() { return (uint8_t*)&_sin.sin_addr.s_addr; };
+    uint8_t *raw_address() {
+        return (uint8_t *)&_sin.sin_addr.s_addr;
+    };
 
 public:
 
@@ -61,24 +63,32 @@ public:
 
     // Overloaded cast operator to allow IPAddress objects to be used where a pointer
     // to a four-byte uint8_t array is expected
-    operator uint32_t() { return *((uint32_t*)&_sin.sin_addr.s_addr); };
-    bool operator==(const IPAddress& addr) { return (*((uint32_t*)&_sin.sin_addr.s_addr)) == (*((uint32_t*)&addr._sin.sin_addr.s_addr)); };
-    bool operator==(const uint8_t* addr);
+    operator uint32_t() {
+        return *((uint32_t *)&_sin.sin_addr.s_addr);
+    };
+    bool operator==(const IPAddress &addr) {
+        return (*((uint32_t *)&_sin.sin_addr.s_addr)) == (*((uint32_t *)&addr._sin.sin_addr.s_addr));
+    };
+    bool operator==(const uint8_t *addr);
 
     // Overloaded index operator to allow getting and setting individual octets of the address
-    uint8_t operator[](int idx) const { return ((uint8_t*)&_sin.sin_addr.s_addr)[idx]; };
-    operator in_addr_t() { return _sin.sin_addr.s_addr; };
+    uint8_t operator[](int idx) const {
+        return ((uint8_t *)&_sin.sin_addr.s_addr)[idx];
+    };
+    operator in_addr_t() {
+        return _sin.sin_addr.s_addr;
+    };
     //uint8_t& operator[](int idx) { return ((uint8_t*)&_sin.sin_addr.s_addr))[idx]; };
 
     // Overloaded copy operators to allow initialisation of IPAddress objects from other types
-    IPAddress& operator=(const uint8_t *address);
-    IPAddress& operator=(uint32_t address);
-    IPAddress& operator=(struct sockaddr_in *psin);
+    IPAddress &operator=(const uint8_t *address);
+    IPAddress &operator=(uint32_t address);
+    IPAddress &operator=(struct sockaddr_in *psin);
 
-	// TODO: fix operator overloading to allow extract of sin.sin_addr.s_addr from IP object
-	struct sockaddr_in _sin;	// IPv4 address and others
+    // TODO: fix operator overloading to allow extract of sin.sin_addr.s_addr from IP object
+    struct sockaddr_in _sin;	// IPv4 address and others
 
-    virtual size_t printTo(Print& p) const;
+    virtual size_t printTo(Print &p) const;
 
     friend class WiFiClass;
     friend class EthernetClass;

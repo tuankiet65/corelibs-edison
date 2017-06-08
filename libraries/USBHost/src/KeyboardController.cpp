@@ -19,22 +19,22 @@
 #include <KeyboardController.h>
 
 extern "C" {
-void __keyboardControllerEmptyCallback() { }
+    void __keyboardControllerEmptyCallback() { }
 }
 
 void keyPressed()  __attribute__ ((weak, alias("__keyboardControllerEmptyCallback")));
 void keyReleased() __attribute__ ((weak, alias("__keyboardControllerEmptyCallback")));
 
 void KeyboardController::OnKeyDown(uint8_t _mod, uint8_t _oemKey) {
-	modifiers = _mod;
-	keyOem = _oemKey;
-	key = OemToAscii(0, _oemKey);
-	keyPressed();
+    modifiers = _mod;
+    keyOem = _oemKey;
+    key = OemToAscii(0, _oemKey);
+    keyPressed();
 }
 
 void KeyboardController::OnKeyUp(uint8_t _mod, uint8_t _oemKey) {
-	modifiers = _mod;
-	keyOem = _oemKey;
-	key = OemToAscii(0, _oemKey);
-	keyReleased();
+    modifiers = _mod;
+    keyOem = _oemKey;
+    key = OemToAscii(0, _oemKey);
+    keyReleased();
 }

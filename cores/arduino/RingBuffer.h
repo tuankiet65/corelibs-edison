@@ -27,17 +27,20 @@
 // location from which to read.
 #define SERIAL_BUFFER_SIZE 256
 
-class RingBuffer
-{
+class RingBuffer {
 public:
-	uint8_t _aucBuffer[SERIAL_BUFFER_SIZE] ;
-	int _iHead ;
-	int _iTail ;
-	bool _buffer_overflow ;
+    uint8_t _aucBuffer[SERIAL_BUFFER_SIZE] ;
+    int _iHead ;
+    int _iTail ;
+    bool _buffer_overflow ;
 
-	RingBuffer( void ) ;
-	void store_char( uint8_t c ) ;
-	bool overflow() { bool ret = _buffer_overflow; _buffer_overflow = false; return ret; }
+    RingBuffer( void ) ;
+    void store_char( uint8_t c ) ;
+    bool overflow() {
+        bool ret = _buffer_overflow;
+        _buffer_overflow = false;
+        return ret;
+    }
 } ;
 
 #endif /* _RING_BUFFER_ */
