@@ -52,7 +52,7 @@ public:
 	using Print::write;
 
 	int _sock;
-	int *_inactive_counter;
+	int _inactive_counter = 0;
 	class EthernetServer * _pCloseServer;
 	bool connect_true;
 	int id;

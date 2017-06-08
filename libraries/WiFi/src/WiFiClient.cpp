@@ -200,18 +200,13 @@ int WiFiClient::available()
 		}
 
 		if ( ret == 0 && bytes != 0){
-		    	if (_inactive_counter)
-		    		*_inactive_counter = 0;
+    		_inactive_counter = 0;
 			return 1;
 		}else{
-			if (_inactive_counter == NULL)
-				return 0;
-
-			// Increment inactivity counter
-			(*_inactive_counter)++;
+			_inactive_counter++;
 
 			// counter exceeded nuke connection
-			if ( *_inactive_counter >= CLIENT_MAX_INACTIVITY_RETRIES){
+			if ( _inactive_counter >= CLIENT_MAX_INACTIVITY_RETRIES){
 				trace_info("Inactivity counter on socket reached %d - closing connection", CLIENT_MAX_INACTIVITY_RETRIES);
 				stop();
 			}
@@ -268,8 +263,7 @@ void WiFiClient::stop()
 		return;
 
 	connect_true = false;
-	if (_inactive_counter != NULL)
-		*_inactive_counter = 0;
+	_inactive_counter = 0;
 	if(_sock != -1){
 		close(_sock);
 		_sock = -1;

@@ -44,7 +44,6 @@ EthernetServer::EthernetServer(uint16_t port)
 	_sock = -1;
 	_init_ok = false;
 	pclients = new EthernetClient[MAX_SOCK_NUM];
-	_pcli_inactivity_counter = new int[MAX_SOCK_NUM];
 	_scansock = 0;
 
 	if (pclients == NULL){
@@ -52,7 +51,6 @@ EthernetServer::EthernetServer(uint16_t port)
 		return;
 	}
 	for(int sock = 0; sock < MAX_SOCK_NUM; sock++){
-		_pcli_inactivity_counter[sock] = 0;
 		pclients[sock].id = sock;
 	}
 }
@@ -62,11 +60,6 @@ EthernetServer::~EthernetServer()
     if (pclients != NULL){
     	delete [] pclients;
     	pclients = NULL;
-    }
-
-    if(_pcli_inactivity_counter != NULL){
-    	delete [] _pcli_inactivity_counter;
-    	_pcli_inactivity_counter = NULL;
     }
 }
 
@@ -148,7 +141,6 @@ void EthernetServer::accept()
 				pclients[sock]._sock = ret;
 				pclients[sock]._pCloseServer = this;
 				pclients[sock].connect_true = true;
-				pclients[sock]._inactive_counter = &_pcli_inactivity_counter[sock];
 				success = 1;
 			}
 		}
