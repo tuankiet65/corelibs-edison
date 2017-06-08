@@ -27,7 +27,11 @@ int DhcpShieldClass::beginWithDHCP(uint8_t *mac, unsigned long timeout, unsigned
 
 void DhcpShieldClass::reset_DHCP_lease() {
     // zero out _dhcpSubnetMask, _dhcpGatewayIp, _dhcpLocalIp, _dhcpDhcpServerIp, _dhcpDnsServerIp
-    memset(_dhcpLocalIp, 0, 20);
+    memset(_dhcpSubnetMask, 0, sizeof(_dhcpSubnetMask));
+    memset(_dhcpGatewayIp, 0, sizeof(_dhcpGatewayIp));
+    memset(_dhcpLocalIp, 0, sizeof(_dhcpLocalIp));
+    memset(_dhcpDhcpServerIp, 0, sizeof(_dhcpSubnetMask));
+    memset(_dhcpDnsServerIp, 0, sizeof(_dhcpSubnetMask));
 }
 
 //return:0 on error, 1 if request is sent and response is received
